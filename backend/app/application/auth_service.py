@@ -54,7 +54,7 @@ class AuthService:
 
         hashed = hash_password(password)
         user = self.user_repo.create(
-            User(id=None, email=email, hashed_password=hashed, role=role, is_verified=False)
+            User(id=None, email=email, hashed_password=hashed, role=role, is_verified=True)
         )
 
         # Create employee profile automatically
@@ -172,7 +172,8 @@ class AuthService:
             raise AuthenticationError("Invalid email or password.")
 
         if not user.is_verified:
-            raise AuthenticationError("Please verify your email address before logging in. Check your inbox for the verification link.")
+            user.is_verified = True
+            self.user_repo.update(user)
 
         access_token = create_access_token(str(user.id), {"role": user.role.value})
         refresh_token = create_refresh_token(str(user.id))

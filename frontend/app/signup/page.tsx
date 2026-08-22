@@ -29,9 +29,6 @@ export default function SignupPage() {
   const router = useRouter();
   const [showPw, setShowPw] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState("");
-  const [isResending, setIsResending] = useState(false);
 
   const {
     register,
@@ -46,73 +43,16 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       await authApi.signup(data);
-      setSubmittedEmail(data.email);
-      setIsSubmitted(true);
-      toast.success("Account created! Check your email for verification.");
+      toast.success("Account created successfully! Redirecting to sign in...");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || "Signup failed.");
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center py-12 px-4 relative overflow-hidden bg-bg text-text-primary">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-600/15 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-600/15 rounded-full blur-3xl" />
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-lg"
-        >
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 mb-4 shadow-lg shadow-purple-900/20">
-              <Mail className="text-white w-6 h-6" />
-            </div>
-            <h1 className="text-3xl font-bold text-text-primary font-outfit">Check Your Inbox</h1>
-            <p className="text-text-secondary mt-2 text-sm max-w-sm mx-auto">
-              We have sent a verification email to <strong className="text-text-primary">{submittedEmail}</strong> via Brevo SMTP. Please check your inbox and click the verification link.
-            </p>
-          </div>
-
-          <div className="glass-card p-8 text-center space-y-4 shadow-xl border border-border">
-            <p className="text-text-secondary text-sm">
-              Didn&apos;t receive the email? Check your spam folder or request a new verification link below.
-            </p>
-            <button
-              onClick={async () => {
-                setIsResending(true);
-                try {
-                  await authApi.resendVerification(submittedEmail);
-                  toast.success("Verification email resent successfully!");
-                } catch (err: any) {
-                  toast.error(err?.response?.data?.detail || "Failed to resend email.");
-                } finally {
-                  setIsResending(false);
-                }
-              }}
-              disabled={isResending}
-              id="resend-verification-btn"
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              {isResending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Resend Verification Email"}
-            </button>
-
-            <p className="text-sm mt-4">
-              <Link href="/login" className="text-primary hover:underline font-medium">
-                Back to Sign In
-              </Link>
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
 
   return (

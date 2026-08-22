@@ -17,7 +17,7 @@ class UserModel(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
     role = Column(SAEnum(Role, name="role_enum"), nullable=False)
-    is_verified = Column(Boolean, default=False, nullable=False)
+    is_verified = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     employee = relationship("EmployeeModel", back_populates="user", uselist=False)

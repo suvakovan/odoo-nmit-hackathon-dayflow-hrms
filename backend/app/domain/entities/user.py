@@ -9,7 +9,7 @@ class User:
     email: str
     hashed_password: str
     role: Role
-    is_verified: bool = False
+    is_verified: bool = True
 
     def is_admin(self) -> bool:
         return self.role == Role.ADMIN

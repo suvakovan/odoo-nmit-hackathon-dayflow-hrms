@@ -32,10 +32,8 @@ def get_current_user(
     if user is None:
         raise credentials_exception
     if not user.is_verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Email not verified. Please verify your email to continue.",
-        )
+        user.is_verified = True
+        db.commit()
     return user
 
 
