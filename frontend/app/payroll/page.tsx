@@ -49,9 +49,9 @@ export default function PayrollPage() {
     employee_id: 0,
     basic: 50000,
     hra: 20000,
-    allowances: { transport: 5000, medical: 5000, special: 10000 },
-    deductions: { pf: 3600, tax: 2400 },
-    net_salary: 81400,
+    allowances: { hand_money: 10000, transport: 5000, special: 5000 },
+    deductions: { transaction_fee: 250, monthly_savings: 5000, pf: 3600 },
+    net_salary: 81150,
     effective_from: new Date().toISOString().slice(0, 10),
     is_active: true,
   };

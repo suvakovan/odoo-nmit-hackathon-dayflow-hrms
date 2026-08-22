@@ -32,8 +32,8 @@ class PayrollService:
                 employee_id=emp.id,
                 basic=Decimal("50000.00"),
                 hra=Decimal("20000.00"),
-                allowances={"transport": 5000, "medical": 5000, "special": 10000},
-                deductions={"pf": 3600, "tax": 2400},
+                allowances={"hand_money": 10000, "transport": 5000, "special": 5000},
+                deductions={"transaction_fee": 250, "monthly_savings": 5000, "pf": 3600},
                 effective_from=date.today(),
                 is_active=True,
             )
