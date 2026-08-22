@@ -161,3 +161,100 @@ def send_leave_status_email(to_email: str, status: str, leave_type: str, comment
     </div>
     """
     return send_email(to_email, f"Leave Request {status} — Dayflow HRMS", html)
+
+
+def send_salary_update_email(
+    to_email: str,
+    employee_name: str,
+    net_salary: float,
+    basic: float,
+    hra: float,
+    hand_money: float,
+    transaction_fee: float,
+    monthly_savings: float,
+) -> bool:
+    html = f"""
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border-radius: 16px; padding: 32px; border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="color: #6366F1; font-size: 28px; font-weight: bold; margin: 0;">Dayflow HRMS</h1>
+            <p style="color: #64748B; font-size: 14px; margin-top: 4px;">Salary Notification</p>
+        </div>
+        <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+            <h2 style="color: #1E293B; font-size: 20px; margin-top: 0;">Salary Structure Updated</h2>
+            <p style="color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{employee_name}</strong>,</p>
+            <p style="color: #475569; font-size: 14px; line-height: 1.6;">Your salary structure has been updated by HR. Here is your revised monthly salary breakdown:</p>
+            
+            <div style="background: #EEF2FF; padding: 16px; border-radius: 10px; text-align: center; margin: 20px 0;">
+                <p style="color: #4F46E5; font-size: 12px; font-weight: bold; uppercase; margin: 0;">Monthly Net Salary</p>
+                <p style="color: #1E1B4B; font-size: 32px; font-weight: 800; margin: 4px 0 0 0;">₹{net_salary:,.2f}</p>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
+                <tr style="border-bottom: 1px solid #E2E8F0;">
+                    <td style="padding: 8px 0; color: #64748B;">Basic Salary</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #0F172A;">₹{basic:,.2f}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #E2E8F0;">
+                    <td style="padding: 8px 0; color: #64748B;">HRA</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #0F172A;">₹{hra:,.2f}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #E2E8F0;">
+                    <td style="padding: 8px 0; color: #10B981; font-weight: 600;">Hand Money (Cash)</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #10B981;">₹{hand_money:,.2f}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #E2E8F0;">
+                    <td style="padding: 8px 0; color: #D97706; font-weight: 600;">Transaction Fee</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #D97706;">₹{transaction_fee:,.2f}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #8B5CF6; font-weight: 600;">Monthly Savings</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #8B5CF6;">₹{monthly_savings:,.2f}</td>
+                </tr>
+            </table>
+
+            <div style="text-align: center; margin-top: 24px;">
+                <a href="http://localhost:3000/payroll" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-block;">
+                   View Payroll & Download Payslip
+                </a>
+            </div>
+        </div>
+    </div>
+    """
+    return send_email(to_email, f"Salary Structure Updated — Dayflow HRMS", html)
+
+
+def send_attendance_notification_email(
+    to_email: str,
+    employee_name: str,
+    action: str,  # "Check-In", "Check-Out", or "Attendance Corrected"
+    date_str: str,
+    time_str: str,
+    status: str,
+) -> bool:
+    html = f"""
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border-radius: 16px; padding: 32px; border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="color: #6366F1; font-size: 28px; font-weight: bold; margin: 0;">Dayflow HRMS</h1>
+            <p style="color: #64748B; font-size: 14px; margin-top: 4px;">Attendance Activity</p>
+        </div>
+        <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+            <h2 style="color: #1E293B; font-size: 20px; margin-top: 0;">Attendance {action} Recorded</h2>
+            <p style="color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{employee_name}</strong>,</p>
+            <p style="color: #475569; font-size: 14px; line-height: 1.6;">Your attendance activity has been logged on Dayflow HRMS:</p>
+            
+            <div style="background: #F8FAFC; padding: 16px; border-radius: 10px; border: 1px solid #E2E8F0; margin: 16px 0;">
+                <p style="margin: 4px 0; font-size: 13px; color: #475569;"><strong>Action:</strong> {action}</p>
+                <p style="margin: 4px 0; font-size: 13px; color: #475569;"><strong>Date:</strong> {date_str}</p>
+                <p style="margin: 4px 0; font-size: 13px; color: #475569;"><strong>Time:</strong> {time_str}</p>
+                <p style="margin: 4px 0; font-size: 13px; color: #475569;"><strong>Status:</strong> <span style="color: #10B981; font-weight: bold;">{status}</span></p>
+            </div>
+
+            <div style="text-align: center; margin-top: 24px;">
+                <a href="http://localhost:3000/attendance" style="background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-block;">
+                   View Attendance Logs
+                </a>
+            </div>
+        </div>
+    </div>
+    """
+    return send_email(to_email, f"Attendance {action} Notification — Dayflow HRMS", html)

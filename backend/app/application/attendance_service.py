@@ -45,8 +45,32 @@ class AttendanceService:
             status=AttendanceStatus.PRESENT,
         )
         saved = self.repo.create(new_record)
+        rec = self.db.query(m.AttendanceModel).filter(m.AttendanceModel.id == saved.id).first()
 
-        return self.db.query(m.AttendanceModel).filter(m.AttendanceModel.id == saved.id).first()
+        # Send notification & email
+        try:
+            from app.application.notification_service import NotificationService
+            from app.infrastructure.email.mailer import send_attendance_notification_email
+            time_str = now.strftime("%I:%M %p UTC")
+            date_str = today.strftime("%Y-%m-%d")
+            
+            NotificationService(self.db).create_notification(
+                user_id=requester.id,
+                message=f"Check-in recorded for {date_str} at {time_str}."
+            )
+            if requester.email:
+                send_attendance_notification_email(
+                    to_email=requester.email,
+                    employee_name=f"{emp.first_name} {emp.last_name}",
+                    action="Check-In",
+                    date_str=date_str,
+                    time_str=time_str,
+                    status="PRESENT",
+                )
+        except Exception:
+            pass
+
+        return rec
 
     def check_out(self, requester: m.UserModel) -> m.AttendanceModel:
         emp = self._get_employee_for_user(requester)
@@ -74,8 +98,33 @@ class AttendanceService:
             status=new_status,
         )
         saved = self.repo.update(updated)
+        rec = self.db.query(m.AttendanceModel).filter(m.AttendanceModel.id == saved.id).first()
 
-        return self.db.query(m.AttendanceModel).filter(m.AttendanceModel.id == saved.id).first()
+        # Send notification & email
+        try:
+            from app.application.notification_service import NotificationService
+            from app.infrastructure.email.mailer import send_attendance_notification_email
+            time_str = now.strftime("%I:%M %p UTC")
+            date_str = existing.date.strftime("%Y-%m-%d")
+            status_val = new_status.value if hasattr(new_status, 'value') else str(new_status)
+
+            NotificationService(self.db).create_notification(
+                user_id=requester.id,
+                message=f"Check-out recorded for {date_str} at {time_str}. Status: {status_val}."
+            )
+            if requester.email:
+                send_attendance_notification_email(
+                    to_email=requester.email,
+                    employee_name=f"{emp.first_name} {emp.last_name}",
+                    action="Check-Out",
+                    date_str=date_str,
+                    time_str=time_str,
+                    status=status_val,
+                )
+        except Exception:
+            pass
+
+        return rec
 
     def get_my_attendance(
         self,
@@ -95,7 +144,6 @@ class AttendanceService:
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
     ) -> List[m.AttendanceModel]:
-        # Service-level guard
         if requester.role != Role.ADMIN:
             raise PermissionDeniedError("Only admins can view all attendance records.")
         records = self.repo.list_all(employee_id, date_from, date_to)
@@ -103,7 +151,6 @@ class AttendanceService:
         return self.db.query(m.AttendanceModel).filter(m.AttendanceModel.id.in_(ids)).all()
 
     def mark_range_as_leave(self, employee_id: int, start: date, end: date) -> None:
-        """Mark all dates in range as LEAVE status (called on leave approval)."""
         from datetime import timedelta
         current = start
         while current <= end:
@@ -144,7 +191,6 @@ class AttendanceService:
         record.check_in = check_in
         record.check_out = check_out
         
-        # Calculate status
         if check_in and check_out:
             delta_hours = (check_out - check_in).total_seconds() / 3600
             if delta_hours < 4.5:
@@ -157,5 +203,33 @@ class AttendanceService:
         record.flagged = False
         self.db.commit()
         self.db.refresh(record)
+
+        # Notify employee of HR correction
+        try:
+            emp = self.db.query(m.EmployeeModel).filter(m.EmployeeModel.id == record.employee_id).first()
+            if emp and emp.user_id:
+                user = self.db.query(m.UserModel).filter(m.UserModel.id == emp.user_id).first()
+                from app.application.notification_service import NotificationService
+                from app.infrastructure.email.mailer import send_attendance_notification_email
+                date_str = record.date.strftime("%Y-%m-%d")
+                status_val = record.status.value if hasattr(record.status, 'value') else str(record.status)
+                time_str = check_in.strftime("%I:%M %p UTC") if check_in else "N/A"
+
+                NotificationService(self.db).create_notification(
+                    user_id=emp.user_id,
+                    message=f"Your attendance for {date_str} was updated by HR. Status: {status_val}."
+                )
+                if user and user.email:
+                    send_attendance_notification_email(
+                        to_email=user.email,
+                        employee_name=f"{emp.first_name} {emp.last_name}",
+                        action="Correction by HR",
+                        date_str=date_str,
+                        time_str=time_str,
+                        status=status_val,
+                    )
+        except Exception:
+            pass
+
         return record
 

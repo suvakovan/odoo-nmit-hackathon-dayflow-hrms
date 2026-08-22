@@ -120,19 +120,32 @@ class PayrollService:
         )
         saved = self.repo.create(new_structure)
         
-        # Notify employee (non-blocking)
+        # Notify employee with email + in-app notification
         try:
             emp = self.db.query(m.EmployeeModel).filter(m.EmployeeModel.id == employee_id).first()
             if emp and emp.user_id:
-                from app.infrastructure.tasks import task_send_notification_and_email
-                task_send_notification_and_email.delay(
+                from app.application.notification_service import NotificationService
+                from app.infrastructure.email.mailer import send_salary_update_email
+                
+                user = self.db.query(m.UserModel).filter(m.UserModel.id == emp.user_id).first()
+                NotificationService(self.db).create_notification(
                     user_id=emp.user_id,
-                    message="Your salary structure has been updated by HR.",
-                    email_subject="Salary Structure Updated",
-                    email_body=f"Hello {emp.first_name},\n\nYour salary structure has been updated by HR. Please check your payroll dashboard for details."
+                    message=f"Your salary structure has been updated by HR. Net Salary: ₹{saved.net_salary:,.2f}"
                 )
-        except Exception:
-            pass
+                if user and user.email:
+                    send_salary_update_email(
+                        to_email=user.email,
+                        employee_name=f"{emp.first_name} {emp.last_name}",
+                        net_salary=float(saved.net_salary),
+                        basic=float(saved.basic),
+                        hra=float(saved.hra),
+                        hand_money=float(allowances.get("hand_money", 0)),
+                        transaction_fee=float(deductions.get("transaction_fee", 0)),
+                        monthly_savings=float(deductions.get("monthly_savings", 0)),
+                    )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Failed to send salary notification email: {e}")
 
         return self.db.query(m.SalaryStructureModel).filter(
             m.SalaryStructureModel.id == saved.id
