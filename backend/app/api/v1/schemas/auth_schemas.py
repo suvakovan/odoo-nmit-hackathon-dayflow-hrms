@@ -9,8 +9,8 @@ class SignupRequest(BaseModel):
     role: Role = Role.EMPLOYEE
     first_name: str
     last_name: str
-    department: str
-    designation: str
+    department: str = "General"
+    designation: str = "Employee"
 
     @field_validator("password")
     @classmethod
@@ -52,3 +52,8 @@ class UserResponse(BaseModel):
     is_verified: bool
 
     model_config = {"from_attributes": True}
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+

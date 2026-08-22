@@ -4,6 +4,7 @@ import { LoginRequest, SignupRequest, TokenResponse, UserResponse } from "../typ
 export const authApi = {
   signup: (data: SignupRequest) => api.post("/auth/signup", data),
   verifyEmail: (token: string) => api.post("/auth/verify-email", { token }),
+  resendVerification: (email: string) => api.post("/auth/resend-verification", { email }),
   login: (data: LoginRequest) =>
     api.post<TokenResponse>("/auth/login", data),
   refresh: (refresh_token: string) =>
@@ -27,6 +28,8 @@ export const employeeApi = {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
+  getDocuments: (id: number) => api.get(`/employees/${id}/documents`),
+  deleteDocument: (empId: number, docId: number) => api.delete(`/employees/${empId}/documents/${docId}`),
 };
 
 export const attendanceApi = {
@@ -38,7 +41,11 @@ export const attendanceApi = {
     employee_id?: number;
     date_from?: string;
     date_to?: string;
+    department?: string;
   }) => api.get("/attendance/", { params }),
+  getFlagged: () => api.get("/attendance/flagged"),
+  correctTime: (id: number, data: { check_in?: string; check_out?: string }) =>
+    api.patch(`/attendance/${id}/correct-time`, data),
 };
 
 export const leaveApi = {
@@ -62,6 +69,8 @@ export const payrollApi = {
   mySalary: () => api.get("/payroll/me"),
   downloadSlip: (month: string) =>
     api.get(`/payroll/me/slip/${month}`, { responseType: "blob" }),
+  downloadEmployeeSlip: (employeeId: number, month: string) =>
+    api.get(`/payroll/${employeeId}/slip/${month}`, { responseType: "blob" }),
   all: () => api.get("/payroll/"),
   update: (
     employeeId: number,
@@ -91,8 +100,16 @@ export const reportsApi = {
   attendance: (params?: {
     date_from?: string;
     date_to?: string;
+    employee_id?: number;
+    department?: string;
     format?: "csv" | "json";
   }) => api.get("/reports/attendance", { params, responseType: "blob" }),
-  leaveSummary: (year?: number) =>
-    api.get("/reports/leave-summary", { params: { year } }),
+  leaveSummary: (params?: { year?: number; format?: "csv" | "json"; department?: string }) =>
+    api.get("/reports/leave-summary", {
+      params,
+      responseType: params?.format === "csv" ? "blob" : "json",
+    }),
+  payroll: (params?: { month?: string }) =>
+    api.get("/reports/payroll", { params, responseType: "blob" }),
 };
+

@@ -20,6 +20,7 @@ class Attendance:
     check_in: Optional[datetime]
     check_out: Optional[datetime]
     status: AttendanceStatus
+    flagged: bool = False
 
     @property
     def working_hours(self) -> Optional[float]:

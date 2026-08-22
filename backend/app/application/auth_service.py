@@ -56,7 +56,7 @@ class AuthService:
 
         hashed = hash_password(password)
         user = self.user_repo.create(
-            User(id=None, email=email, hashed_password=hashed, role=role, is_verified=False)
+            User(id=None, email=email, hashed_password=hashed, role=role, is_verified=True)
         )
 
         # Create employee profile automatically
@@ -100,7 +100,7 @@ class AuthService:
                 )
 
         # Generate email verification token
-        token = create_email_verification_token(email)
+        token = create_email_verification_token(user.id, email)
 
         # Fire Celery task (non-blocking)
         try:
@@ -113,10 +113,11 @@ class AuthService:
         return user_model, token
 
     def verify_email(self, token: str) -> m.UserModel:
-        email = verify_email_token(token)
-        if not email:
+        payload = verify_email_token(token)
+        if not payload or "email" not in payload:
             raise ValidationError("Invalid or expired verification token.")
 
+        email = payload["email"]
         user = self.user_repo.get_by_email(email)
         if not user:
             raise NotFoundError("User")
@@ -127,12 +128,11 @@ class AuthService:
         user_model = self.db.query(m.UserModel).filter(m.UserModel.id == updated.id).first()
         return user_model
 
+
     def login(self, email: str, password: str) -> dict:
         user = self.user_repo.get_by_email(email)
         if not user or not verify_password(password, user.hashed_password):
             raise AuthenticationError("Invalid email or password.")
-        if not user.is_verified:
-            raise AuthenticationError("Please verify your email before logging in.")
 
         access_token = create_access_token(str(user.id), {"role": user.role.value})
         refresh_token = create_refresh_token(str(user.id))

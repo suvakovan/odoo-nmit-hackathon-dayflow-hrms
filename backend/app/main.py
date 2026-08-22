@@ -13,10 +13,15 @@ from app.core.exceptions import (
 from app.domain.exceptions import DomainError
 
 
+from app.seed import seed_default_users
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure upload directory exists
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    # Seed default admin & employee credentials if they don't exist
+    seed_default_users()
     yield
 
 

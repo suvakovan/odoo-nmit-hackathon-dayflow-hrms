@@ -61,9 +61,11 @@ class LeaveService:
 
         # Notify admins (non-blocking)
         try:
-            from app.infrastructure.tasks import task_notify_admins_new_leave
-            task_notify_admins_new_leave.delay(
-                f"{emp.first_name} {emp.last_name}", leave_type.value, leave.total_days
+            from app.infrastructure.tasks import task_notify_admins
+            task_notify_admins.delay(
+                message=f"New leave request submitted by {emp.first_name} {emp.last_name}.",
+                email_subject="New Leave Request Submitted",
+                email_body=f"Employee {emp.first_name} {emp.last_name} has requested {leave.total_days} day(s) of {leave_type.value} leave starting from {start_date} to {end_date}."
             )
         except Exception:
             pass
@@ -91,9 +93,16 @@ class LeaveService:
         if leave.leave_type != LeaveType.UNPAID:
             year = leave.start_date.year
             balance = self.repo.get_balance(leave.employee_id, leave.leave_type, year)
-            if balance:
-                balance.used_days += leave.total_days
-                self.repo.update_balance(balance)
+            if not balance:
+                raise ConflictError(f"No leave balance configured for {leave.leave_type.value} in {year}.")
+            
+            remaining = balance.total_days - balance.used_days
+            if remaining < leave.total_days:
+                from app.domain.exceptions import InsufficientLeaveBalance
+                raise InsufficientLeaveBalance(leave.leave_type.value, remaining, leave.total_days)
+
+            balance.used_days += leave.total_days
+            self.repo.update_balance(balance)
 
         # Mark attendance range as LEAVE
         from app.application.attendance_service import AttendanceService
@@ -106,9 +115,12 @@ class LeaveService:
                 m.EmployeeModel.id == leave.employee_id
             ).first()
             if emp_obj and emp_obj.user:
-                from app.infrastructure.tasks import task_send_leave_status_email
-                task_send_leave_status_email.delay(
-                    emp_obj.user.email, "APPROVED", leave.leave_type.value, comment
+                from app.infrastructure.tasks import task_send_notification_and_email
+                task_send_notification_and_email.delay(
+                    user_id=emp_obj.user.id,
+                    message=f"Your leave request for {leave.leave_type} has been APPROVED.",
+                    email_subject="Leave Request Approved",
+                    email_body=f"Hello {emp_obj.first_name},\n\nYour leave request for {leave.leave_type} from {leave.start_date} to {leave.end_date} has been APPROVED.\nComment: {comment or 'No comments'}"
                 )
         except Exception:
             pass
@@ -137,9 +149,12 @@ class LeaveService:
                 m.EmployeeModel.id == leave.employee_id
             ).first()
             if emp_obj and emp_obj.user:
-                from app.infrastructure.tasks import task_send_leave_status_email
-                task_send_leave_status_email.delay(
-                    emp_obj.user.email, "REJECTED", leave.leave_type.value, comment
+                from app.infrastructure.tasks import task_send_notification_and_email
+                task_send_notification_and_email.delay(
+                    user_id=emp_obj.user.id,
+                    message=f"Your leave request for {leave.leave_type} has been REJECTED.",
+                    email_subject="Leave Request Rejected",
+                    email_body=f"Hello {emp_obj.first_name},\n\nYour leave request for {leave.leave_type} from {leave.start_date} to {leave.end_date} has been REJECTED.\nComment: {comment or 'No comments'}"
                 )
         except Exception:
             pass

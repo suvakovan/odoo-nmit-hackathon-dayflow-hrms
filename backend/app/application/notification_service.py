@@ -47,3 +47,13 @@ class NotificationService:
         )
         self.db.commit()
         return count
+
+    def create_notification(self, user_id: int, message: str) -> m.NotificationModel:
+        return self.create(user_id, message)
+
+    def mark_as_read(self, notification_id: int, user_id: int) -> m.NotificationModel:
+        return self.mark_read(notification_id, user_id)
+
+    def list_unread(self, user_id: int) -> List[m.NotificationModel]:
+        return self.get_for_user(user_id, unread_only=True)
+

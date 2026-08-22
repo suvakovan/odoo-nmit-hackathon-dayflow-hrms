@@ -21,6 +21,7 @@ class SAAttendanceRepository(IAttendanceRepository):
             check_in=obj.check_in,
             check_out=obj.check_out,
             status=obj.status,
+            flagged=obj.flagged,
         )
 
     def get_by_id(self, attendance_id: int) -> Optional[Attendance]:
@@ -75,6 +76,7 @@ class SAAttendanceRepository(IAttendanceRepository):
             check_in=attendance.check_in,
             check_out=attendance.check_out,
             status=attendance.status,
+            flagged=attendance.flagged,
         )
         self.db.add(obj)
         self.db.commit()
@@ -86,6 +88,7 @@ class SAAttendanceRepository(IAttendanceRepository):
         obj.check_in = attendance.check_in
         obj.check_out = attendance.check_out
         obj.status = attendance.status
+        obj.flagged = attendance.flagged
         self.db.commit()
         self.db.refresh(obj)
         return self._to_entity(obj)

@@ -3,7 +3,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.v1.schemas.attendance_schemas import AttendanceResponse
+from app.api.v1.schemas.attendance_schemas import AttendanceResponse, AttendanceCorrectRequest
 from app.application.attendance_service import AttendanceService
 from app.core.dependencies import get_current_user, require_role
 from app.core.exceptions import NotFoundError, PermissionDeniedError, ConflictError
@@ -71,3 +71,34 @@ def all_attendance(
         return [AttendanceResponse.from_orm_with_hours(r) for r in records]
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.get("/flagged", response_model=List[AttendanceResponse])
+def get_flagged_attendance(
+    current_user: m.UserModel = Depends(require_role(Role.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    svc = AttendanceService(db)
+    try:
+        records = svc.get_flagged(current_user)
+        return [AttendanceResponse.from_orm_with_hours(r) for r in records]
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.patch("/{id}/correct-time", response_model=AttendanceResponse)
+def correct_attendance_time(
+    id: int,
+    payload: AttendanceCorrectRequest,
+    current_user: m.UserModel = Depends(require_role(Role.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    svc = AttendanceService(db)
+    try:
+        record = svc.correct_time(current_user, id, payload.check_in, payload.check_out)
+        return AttendanceResponse.from_orm_with_hours(record)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+

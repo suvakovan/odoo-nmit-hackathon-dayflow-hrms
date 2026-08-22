@@ -58,6 +58,7 @@ export interface AttendanceRecord {
   check_out?: string;
   status: AttendanceStatus;
   working_hours?: number;
+  flagged?: boolean;
 }
 
 export interface LeaveRequest {

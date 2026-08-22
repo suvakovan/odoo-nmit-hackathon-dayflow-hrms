@@ -1,15 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.api.v1.schemas.auth_schemas import (
     SignupRequest, VerifyEmailRequest, LoginRequest,
     RefreshRequest, TokenResponse, UserResponse,
+    ResendVerificationRequest,
 )
 from app.application.auth_service import AuthService
 from app.core.dependencies import get_current_user, oauth2_scheme
 from app.core.exceptions import AuthenticationError, ConflictError, ValidationError, NotFoundError
+from app.core.security import create_email_verification_token
 from app.infrastructure.db.session import get_db
 from app.infrastructure.db import models as m
+
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -61,6 +65,52 @@ def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db)):
     except (ValidationError, NotFoundError) as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {"message": "Email verified successfully. You can now log in."}
+
+
+@router.get("/verify-email")
+def verify_email_get(token: str, db: Session = Depends(get_db)):
+    svc = AuthService(db)
+    try:
+        svc.verify_email(token)
+        return RedirectResponse(url="http://localhost:3000/login?verified=true")
+    except Exception:
+        return RedirectResponse(url="http://localhost:3000/login?verified=false")
+
+
+@router.post("/resend-verification")
+def resend_verification(payload: ResendVerificationRequest, db: Session = Depends(get_db)):
+    import redis
+    from app.core.config import settings
+
+    try:
+        r = redis.from_url(settings.REDIS_URL, decode_responses=True)
+        redis_key = f"rate:resend:{payload.email}"
+        if r.get(redis_key):
+            raise HTTPException(
+                status_code=429,
+                detail="Too many requests. Please wait 60 seconds before requesting another verification email."
+            )
+        r.setex(redis_key, 60, "1")
+    except redis.RedisError as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Redis rate limit failed: {e}")
+
+    user_model = db.query(m.UserModel).filter(m.UserModel.email == payload.email).first()
+    if not user_model:
+        raise HTTPException(status_code=404, detail="User not found.")
+    if user_model.is_verified:
+        raise HTTPException(status_code=400, detail="Email is already verified.")
+
+    token = create_email_verification_token(user_model.id, payload.email)
+
+    try:
+        from app.infrastructure.tasks import task_send_verification_email
+        task_send_verification_email.delay(payload.email, token)
+    except Exception:
+        pass
+
+    return {"message": "Verification email resent successfully."}
+
 
 
 @router.post("/login", response_model=TokenResponse)

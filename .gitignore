@@ -44,3 +44,4 @@ Thumbs.db
 backend/app/uploads/
 *.db
 *.sqlite
+celerybeat-schedule*

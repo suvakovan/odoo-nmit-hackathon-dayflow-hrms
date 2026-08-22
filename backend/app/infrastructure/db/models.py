@@ -71,6 +71,7 @@ class AttendanceModel(Base):
     check_in = Column(DateTime(timezone=True), nullable=True)
     check_out = Column(DateTime(timezone=True), nullable=True)
     status = Column(SAEnum(AttendanceStatus, name="attendance_status_enum"), nullable=False)
+    flagged = Column(Boolean, default=False, nullable=False)
 
     __table_args__ = (UniqueConstraint("employee_id", "date", name="uq_attendance_employee_date"),)
 

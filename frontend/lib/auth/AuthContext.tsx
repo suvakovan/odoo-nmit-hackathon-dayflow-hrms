@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await authApi.login({ email, password });
     const { access_token, refresh_token } = res.data;
     localStorage.setItem("access_token", access_token);
+    document.cookie = `access_token=${access_token}; path=/; max-age=86400`;
     if (refresh_token) localStorage.setItem("refresh_token", refresh_token);
 
     const userRes = await authApi.me();
@@ -64,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     setUser(null);
     router.push("/login");
   };

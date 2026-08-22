@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { reportsApi } from "@/lib/api";
 import { PageHeader, Spinner } from "@/components/ui";
-import { Download, FileText, BarChart2 } from "lucide-react";
+import { Download, FileText, BarChart2, DollarSign } from "lucide-react";
 
 export default function AdminReportsPage() {
   const [leaveSummary, setLeaveSummary] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingPayroll, setDownloadingPayroll] = useState(false);
+  const [payrollMonth, setPayrollMonth] = useState(new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
     reportsApi.leaveSummary()
@@ -33,6 +35,24 @@ export default function AdminReportsPage() {
       toast.error("Failed to download report");
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleDownloadPayroll = async () => {
+    setDownloadingPayroll(true);
+    try {
+      const res = await reportsApi.payroll({ month: payrollMonth });
+      const url = URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `payroll-report-${payrollMonth}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Payroll report downloaded!");
+    } catch {
+      toast.error("Failed to download payroll report");
+    } finally {
+      setDownloadingPayroll(false);
     }
   };
 
@@ -70,6 +90,36 @@ export default function AdminReportsPage() {
             <p className="text-white font-semibold">Leave Summary</p>
             <p className="text-slate-400 text-sm">Leave usage breakdown by department</p>
           </div>
+        </div>
+
+        <div className="glass-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:col-span-2">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+              <DollarSign className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-white font-semibold">Payroll Report</p>
+              <p className="text-slate-400 text-sm">Export monthly payroll sheet as CSV</p>
+              <div className="mt-2 flex items-center gap-2">
+                <label className="text-xs text-slate-400 font-semibold">Month:</label>
+                <input
+                  type="month"
+                  className="form-input py-0.5 px-2 text-xs bg-slate-900 border-white/[0.08]"
+                  value={payrollMonth}
+                  onChange={(e) => setPayrollMonth(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <button
+            id="download-payroll-btn"
+            onClick={handleDownloadPayroll}
+            disabled={downloadingPayroll}
+            className="btn-primary flex items-center gap-2 self-stretch md:self-auto justify-center"
+          >
+            <Download className="w-4 h-4" />
+            {downloadingPayroll ? "Downloading…" : "Download CSV"}
+          </button>
         </div>
       </div>
 

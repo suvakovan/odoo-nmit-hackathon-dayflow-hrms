@@ -121,3 +121,41 @@ class AttendanceService:
                     check_in=None, check_out=None, status=AttendanceStatus.LEAVE,
                 ))
             current += timedelta(days=1)
+
+    def get_flagged(self, requester: m.UserModel) -> List[m.AttendanceModel]:
+        if requester.role != Role.ADMIN:
+            raise PermissionDeniedError("Only admins can view flagged attendance records.")
+        return self.db.query(m.AttendanceModel).filter(m.AttendanceModel.flagged == True).all()
+
+    def correct_time(
+        self,
+        requester: m.UserModel,
+        attendance_id: int,
+        check_in: Optional[datetime],
+        check_out: Optional[datetime]
+    ) -> m.AttendanceModel:
+        if requester.role != Role.ADMIN:
+            raise PermissionDeniedError("Only admins can correct attendance records.")
+        
+        record = self.db.query(m.AttendanceModel).filter(m.AttendanceModel.id == attendance_id).first()
+        if not record:
+            raise NotFoundError("Attendance record")
+            
+        record.check_in = check_in
+        record.check_out = check_out
+        
+        # Calculate status
+        if check_in and check_out:
+            delta_hours = (check_out - check_in).total_seconds() / 3600
+            if delta_hours < 4.5:
+                record.status = AttendanceStatus.HALF_DAY
+            else:
+                record.status = AttendanceStatus.PRESENT
+        else:
+            record.status = AttendanceStatus.PRESENT
+
+        record.flagged = False
+        self.db.commit()
+        self.db.refresh(record)
+        return record
+

@@ -1,5 +1,6 @@
 "use client";
 import Sidebar from "@/components/ui/Sidebar";
+import Header from "@/components/ui/Header";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -14,7 +15,11 @@ export default function AttendanceLayout({ children }: { children: React.ReactNo
   return (
     <div className="min-h-screen flex">
       <Sidebar />
-      <main className="flex-1 ml-[260px] min-h-screen p-8">{children}</main>
+      <div className="flex-1 ml-[260px] flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 p-8">{children}</main>
+      </div>
     </div>
   );
 }
+

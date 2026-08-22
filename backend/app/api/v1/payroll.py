@@ -83,3 +83,32 @@ def update_salary(
         raise HTTPException(status_code=404, detail=str(e))
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.get("/{employee_id}/slip/{month}")
+def download_employee_payslip(
+    employee_id: int,
+    month: str,  # format: YYYY-MM
+    current_user: m.UserModel = Depends(require_role(Role.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    svc = PayrollService(db)
+    try:
+        emp = db.query(m.EmployeeModel).filter(m.EmployeeModel.id == employee_id).first()
+        if not emp or not emp.user_id:
+            raise NotFoundError("Employee profile or associated user account")
+        user_obj = db.query(m.UserModel).filter(m.UserModel.id == emp.user_id).first()
+        if not user_obj:
+            raise NotFoundError("Employee user")
+        pdf_bytes = svc.generate_payslip(user_obj, month)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=payslip-{employee_id}-{month}.pdf"},
+    )
+

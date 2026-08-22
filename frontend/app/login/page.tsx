@@ -24,6 +24,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
@@ -128,6 +129,37 @@ export default function LoginPage() {
                 "Sign In"
               )}
             </button>
+
+            {/* Quick Demo Access */}
+            <div className="pt-3 border-t border-slate-800/80 flex flex-col gap-2">
+              <p className="text-xs text-center text-slate-500 font-medium">1-Click Quick Demo Access:</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue("email", "admin@dayflow.com");
+                    setValue("password", "AdminPassword123!");
+                    onSubmit({ email: "admin@dayflow.com", password: "AdminPassword123!" });
+                  }}
+                  disabled={isLoading}
+                  className="px-3 py-2.5 bg-indigo-950/60 hover:bg-indigo-900/60 border border-indigo-500/30 rounded-xl text-xs font-medium text-indigo-300 flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                >
+                  🛡️ Demo Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue("email", "employee@dayflow.com");
+                    setValue("password", "EmployeePassword123!");
+                    onSubmit({ email: "employee@dayflow.com", password: "EmployeePassword123!" });
+                  }}
+                  disabled={isLoading}
+                  className="px-3 py-2.5 bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/50 rounded-xl text-xs font-medium text-slate-300 flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                >
+                  👤 Demo Employee
+                </button>
+              </div>
+            </div>
           </form>
 
           <div className="mt-6 text-center">

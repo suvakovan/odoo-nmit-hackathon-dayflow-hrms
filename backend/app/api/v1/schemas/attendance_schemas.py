@@ -12,6 +12,7 @@ class AttendanceResponse(BaseModel):
     check_out: Optional[datetime] = None
     status: AttendanceStatus
     working_hours: Optional[float] = None
+    flagged: bool = False
 
     model_config = {"from_attributes": True}
 
@@ -29,4 +30,11 @@ class AttendanceResponse(BaseModel):
             check_out=obj.check_out,
             status=obj.status,
             working_hours=hours,
+            flagged=obj.flagged,
         )
+
+
+class AttendanceCorrectRequest(BaseModel):
+    check_in: Optional[datetime] = None
+    check_out: Optional[datetime] = None
+

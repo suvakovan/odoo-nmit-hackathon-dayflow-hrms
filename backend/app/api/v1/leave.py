@@ -83,7 +83,7 @@ def approve_leave(
         return LeaveResponse.from_orm_with_days(obj)
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except (PermissionDeniedError, ConflictError) as e:
+    except (PermissionDeniedError, ConflictError, InsufficientLeaveBalance) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 

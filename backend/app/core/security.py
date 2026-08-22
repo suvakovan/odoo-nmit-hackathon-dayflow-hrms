@@ -1,8 +1,14 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from jose import JWTError, jwt
+import bcrypt
+if not hasattr(bcrypt, "__about__"):
+    class _BcryptAbout:
+        __version__ = getattr(bcrypt, "__version__", "4.3.0")
+    bcrypt.__about__ = _BcryptAbout()
+
 from passlib.context import CryptContext
+from jose import JWTError, jwt
 
 from app.core.config import settings
 
@@ -40,19 +46,20 @@ def decode_token(token: str) -> dict:
     return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
 
 
-def create_email_verification_token(email: str) -> str:
+def create_email_verification_token(user_id: int, email: str) -> str:
     """Create a short-lived signed token for email verification."""
     from itsdangerous import URLSafeTimedSerializer
     s = URLSafeTimedSerializer(settings.JWT_SECRET_KEY)
-    return s.dumps(email, salt="email-verify")
+    return s.dumps({"user_id": user_id, "email": email}, salt="email-verify")
 
 
-def verify_email_token(token: str, max_age: int = 3600) -> Optional[str]:
-    """Validate email verification token. Returns email or None."""
+def verify_email_token(token: str, max_age: int = 3600) -> Optional[dict]:
+    """Validate email verification token. Returns payload dict or None."""
     from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
     s = URLSafeTimedSerializer(settings.JWT_SECRET_KEY)
     try:
-        email = s.loads(token, salt="email-verify", max_age=max_age)
-        return email
+        payload = s.loads(token, salt="email-verify", max_age=max_age)
+        return payload
     except (BadSignature, SignatureExpired):
         return None
+

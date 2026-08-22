@@ -4,6 +4,15 @@ const nextConfig = {
   images: {
     domains: ["localhost"],
   },
+  async redirects() {
+    return [
+      {
+        source: "/login/dashboard/:path*",
+        destination: "/dashboard/:path*",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

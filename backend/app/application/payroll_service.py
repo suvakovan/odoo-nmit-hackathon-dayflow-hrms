@@ -68,9 +68,25 @@ class PayrollService:
             is_active=True,
         )
         saved = self.repo.create(new_structure)
+        
+        # Notify employee (non-blocking)
+        try:
+            emp = self.db.query(m.EmployeeModel).filter(m.EmployeeModel.id == employee_id).first()
+            if emp and emp.user_id:
+                from app.infrastructure.tasks import task_send_notification_and_email
+                task_send_notification_and_email.delay(
+                    user_id=emp.user_id,
+                    message="Your salary structure has been updated by HR.",
+                    email_subject="Salary Structure Updated",
+                    email_body=f"Hello {emp.first_name},\n\nYour salary structure has been updated by HR. Please check your payroll dashboard for details."
+                )
+        except Exception:
+            pass
+
         return self.db.query(m.SalaryStructureModel).filter(
             m.SalaryStructureModel.id == saved.id
         ).first()
+
 
     def generate_payslip(self, requester: m.UserModel, month: str) -> bytes:
         """Generate a PDF payslip for the given month (format: YYYY-MM)."""

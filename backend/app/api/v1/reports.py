@@ -100,3 +100,50 @@ def leave_summary(
         }
         for dept, lt, used, allocated in rows
     ]
+
+
+@router.get("/payroll")
+def payroll_report(
+    month: Optional[str] = Query(None),
+    current_user: m.UserModel = Depends(require_role(Role.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    rows = db.query(m.EmployeeModel, m.SalaryStructureModel).join(
+        m.SalaryStructureModel, m.EmployeeModel.id == m.SalaryStructureModel.employee_id
+    ).filter(
+        m.SalaryStructureModel.is_active == True
+    ).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Employee Code", "Name", "Department", "Designation",
+        "Basic Salary", "HRA", "Total Allowances", "Total Deductions", "Net Salary", "Month"
+    ])
+    
+    rep_month = month or date.today().strftime("%Y-%m")
+    
+    for emp, structure in rows:
+        total_allowances = sum(structure.allowances.values()) if structure.allowances else 0
+        total_deductions = sum(structure.deductions.values()) if structure.deductions else 0
+        net_salary = float(structure.basic) + float(structure.hra) + float(total_allowances) - float(total_deductions)
+        
+        writer.writerow([
+            emp.employee_code,
+            f"{emp.first_name} {emp.last_name}",
+            emp.department,
+            emp.designation,
+            f"{structure.basic:.2f}",
+            f"{structure.hra:.2f}",
+            f"{total_allowances:.2f}",
+            f"{total_deductions:.2f}",
+            f"{net_salary:.2f}",
+            rep_month
+        ])
+
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=payroll-report-{rep_month}.csv"},
+    )
+

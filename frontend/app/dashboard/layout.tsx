@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import Sidebar from "@/components/ui/Sidebar";
+import Header from "@/components/ui/Header";
 import { Spinner } from "@/components/ui";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -22,9 +23,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex">
       <Sidebar />
-      <main className="flex-1 ml-[260px] min-h-screen p-8 overflow-y-auto">
-        {children}
-      </main>
+      <div className="flex-1 ml-[260px] flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 p-8 overflow-y-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
+
