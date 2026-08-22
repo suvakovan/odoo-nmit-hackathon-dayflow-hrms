@@ -21,6 +21,28 @@ class PayrollService:
             raise NotFoundError("Employee")
         return obj
 
+    def _ensure_fields(self, model: m.SalaryStructureModel) -> m.SalaryStructureModel:
+        if not model:
+            return model
+        allow = dict(model.allowances or {})
+        deduct = dict(model.deductions or {})
+        updated = False
+        if 'hand_money' not in allow or not allow['hand_money']:
+            allow['hand_money'] = float(allow.get('special', 10000) or 10000)
+            updated = True
+        if 'transaction_fee' not in deduct or not deduct['transaction_fee']:
+            deduct['transaction_fee'] = 250.0
+            updated = True
+        if 'monthly_savings' not in deduct or not deduct['monthly_savings']:
+            deduct['monthly_savings'] = float(deduct.get('pf', 5000) or 5000)
+            updated = True
+        if updated:
+            model.allowances = allow
+            model.deductions = deduct
+            self.db.commit()
+            self.db.refresh(model)
+        return model
+
     def get_my_salary(self, requester: m.UserModel) -> m.SalaryStructureModel:
         emp = self.db.query(m.EmployeeModel).filter(m.EmployeeModel.user_id == requester.id).first()
         if not emp:
@@ -38,18 +60,15 @@ class PayrollService:
                 is_active=True,
             )
             saved = self.repo.create(new_structure)
-            return self.db.query(m.SalaryStructureModel).filter(
-                m.SalaryStructureModel.id == saved.id
-            ).first()
-        return self.db.query(m.SalaryStructureModel).filter(
-            m.SalaryStructureModel.id == structure.id
-        ).first()
+            model = self.db.query(m.SalaryStructureModel).filter(m.SalaryStructureModel.id == saved.id).first()
+            return self._ensure_fields(model)
+        model = self.db.query(m.SalaryStructureModel).filter(m.SalaryStructureModel.id == structure.id).first()
+        return self._ensure_fields(model)
 
     def get_all_payroll(self, requester: m.UserModel) -> List[m.SalaryStructureModel]:
         if requester.role != Role.ADMIN:
             raise PermissionDeniedError("Only admins can view all payroll records.")
         
-        # Ensure all existing employees have an active salary structure
         all_emps = self.db.query(m.EmployeeModel).all()
         for emp in all_emps:
             struct = self.repo.get_active_structure(emp.id)
@@ -59,8 +78,8 @@ class PayrollService:
                     employee_id=emp.id,
                     basic=Decimal("50000.00"),
                     hra=Decimal("20000.00"),
-                    allowances={"transport": 5000, "medical": 5000, "special": 10000},
-                    deductions={"pf": 3600, "tax": 2400},
+                    allowances={"hand_money": 10000, "transport": 5000, "special": 5000},
+                    deductions={"transaction_fee": 250, "monthly_savings": 5000, "pf": 3600},
                     effective_from=date.today(),
                     is_active=True,
                 )
@@ -68,7 +87,8 @@ class PayrollService:
 
         structures = self.repo.get_all_active()
         ids = [s.id for s in structures]
-        return self.db.query(m.SalaryStructureModel).filter(m.SalaryStructureModel.id.in_(ids)).all()
+        models = self.db.query(m.SalaryStructureModel).filter(m.SalaryStructureModel.id.in_(ids)).all()
+        return [self._ensure_fields(m_obj) for m_obj in models]
 
     def update_salary(
         self,
