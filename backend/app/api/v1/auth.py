@@ -45,6 +45,7 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
             role=payload.role,
             first_name=payload.first_name,
             last_name=payload.last_name,
+            employee_code=payload.employee_code,
         )
     except ConflictError as e:
         raise HTTPException(status_code=409, detail=str(e))

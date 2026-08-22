@@ -14,6 +14,7 @@ import { authApi } from "@/lib/api";
 const schema = z.object({
   first_name: z.string().min(2, "First name required"),
   last_name: z.string().min(2, "Last name required"),
+  employee_code: z.string().optional(),
   email: z.string().email("Invalid email"),
   password: z
     .string()
@@ -90,6 +91,15 @@ export default function SignupPage() {
                   <input {...register("last_name")} id="last_name" placeholder="Doe" className="form-input pl-9" />
                 </div>
                 {errors.last_name && <p className="text-danger text-xs mt-1">{errors.last_name.message}</p>}
+              </div>
+            </div>
+
+            {/* Employee ID / Code */}
+            <div>
+              <label className="form-label">Employee ID (Optional)</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary w-4 h-4" />
+                <input {...register("employee_code")} id="employee_code" placeholder="e.g. EMP-1001 (Auto-assigned if empty)" className="form-input pl-9 text-xs" />
               </div>
             </div>
 

@@ -9,6 +9,7 @@ class SignupRequest(BaseModel):
     role: Role = Role.EMPLOYEE
     first_name: str
     last_name: str
+    employee_code: str | None = None
 
     @field_validator("password")
     @classmethod

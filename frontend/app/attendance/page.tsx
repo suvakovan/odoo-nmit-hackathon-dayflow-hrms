@@ -102,11 +102,40 @@ export default function AttendancePage() {
         </div>
       </motion.div>
 
-      {/* Filter */}
-      <div className="flex gap-3 mb-4">
-        <div><label className="form-label">From</label><input type="date" className="form-input" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} /></div>
-        <div><label className="form-label">To</label><input type="date" className="form-input" value={dateTo} onChange={(e) => setDateTo(e.target.value)} /></div>
-        <div className="flex items-end"><button onClick={fetchAttendance} className="btn-secondary">Apply</button></div>
+      {/* Filter & View Mode Presets */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const todayStr = new Date().toISOString().split("T")[0];
+              setDateFrom(todayStr);
+              setDateTo(todayStr);
+              attendanceApi.myAttendance({ date_from: todayStr, date_to: todayStr }).then(r => setRecords(r.data));
+            }}
+            className="btn-secondary text-xs py-1.5 px-3"
+          >
+            Daily View (Today)
+          </button>
+          <button
+            onClick={() => {
+              const now = new Date();
+              const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+              const todayStr = now.toISOString().split("T")[0];
+              setDateFrom(weekAgo);
+              setDateTo(todayStr);
+              attendanceApi.myAttendance({ date_from: weekAgo, date_to: todayStr }).then(r => setRecords(r.data));
+            }}
+            className="btn-secondary text-xs py-1.5 px-3"
+          >
+            Weekly View (Last 7 Days)
+          </button>
+        </div>
+
+        <div className="flex gap-3 items-end">
+          <div><label className="form-label text-xs">From</label><input type="date" className="form-input text-xs py-1" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} /></div>
+          <div><label className="form-label text-xs">To</label><input type="date" className="form-input text-xs py-1" value={dateTo} onChange={(e) => setDateTo(e.target.value)} /></div>
+          <div><button onClick={fetchAttendance} className="btn-primary text-xs py-1.5 px-3">Apply Filter</button></div>
+        </div>
       </div>
 
       {loading ? (

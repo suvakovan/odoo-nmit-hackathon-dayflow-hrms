@@ -46,6 +46,7 @@ class AuthService:
         role: Role,
         first_name: str,
         last_name: str,
+        employee_code: Optional[str] = None,
     ) -> Tuple[m.UserModel, str]:
         """Register a new user and create their employee profile."""
         existing = self.user_repo.get_by_email(email)
@@ -58,15 +59,17 @@ class AuthService:
         )
 
         # Create employee profile automatically
-        employee_code = _generate_employee_code()
-        while self.employee_repo.get_by_code(employee_code):
-            employee_code = _generate_employee_code()
+        final_code = employee_code.strip() if employee_code and employee_code.strip() else _generate_employee_code()
+        while self.employee_repo.get_by_code(final_code):
+            if employee_code and employee_code.strip():
+                raise ConflictError(f"Employee ID / Code '{final_code}' is already taken.")
+            final_code = _generate_employee_code()
 
         self.employee_repo.create(
             Employee(
                 id=None,
                 user_id=user.id,
-                employee_code=employee_code,
+                employee_code=final_code,
                 first_name=first_name,
                 last_name=last_name,
                 email=email,

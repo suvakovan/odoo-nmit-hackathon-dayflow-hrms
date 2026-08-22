@@ -33,6 +33,7 @@ export interface SignupRequest {
   role: Role;
   first_name: string;
   last_name: string;
+  employee_code?: string;
 }
 
 export interface Employee {
@@ -41,6 +42,7 @@ export interface Employee {
   employee_code: string;
   first_name: string;
   last_name: string;
+  email?: string;
   phone?: string;
   address?: string;
   manager_id?: number;
