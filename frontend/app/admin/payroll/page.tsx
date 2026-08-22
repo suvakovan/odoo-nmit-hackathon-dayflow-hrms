@@ -220,33 +220,67 @@ export default function AdminPayrollPage() {
                     </div>
                   </div>
 
-                  {/* Summary Grid Chips */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 mt-4 pt-4 border-t border-border">
-                    <div className="bg-bg/60 p-2.5 rounded-xl border border-border">
-                      <p className="text-text-secondary text-[11px]">Basic</p>
-                      <p className="text-text-primary font-semibold text-sm">{formatCurrency(p.basic)}</p>
-                    </div>
-                    <div className="bg-bg/60 p-2.5 rounded-xl border border-border">
-                      <p className="text-text-secondary text-[11px]">HRA</p>
-                      <p className="text-text-primary font-semibold text-sm">{formatCurrency(p.hra)}</p>
-                    </div>
-                    <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20">
-                      <p className="text-emerald-400 text-[11px] font-medium">Hand Money</p>
-                      <p className="text-emerald-400 font-bold text-sm">{formatCurrency(p.allowances?.hand_money || p.allowances?.special || 10000)}</p>
-                    </div>
-                    <div className="bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
-                      <p className="text-amber-400 text-[11px] font-medium">Transaction Fee</p>
-                      <p className="text-amber-400 font-bold text-sm">{formatCurrency(p.deductions?.transaction_fee || 250)}</p>
-                    </div>
-                    <div className="bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20">
-                      <p className="text-purple-400 text-[11px] font-medium">Monthly Savings</p>
-                      <p className="text-purple-400 font-bold text-sm">{formatCurrency(p.deductions?.monthly_savings || p.deductions?.pf || 5000)}</p>
-                    </div>
-                    <div className="bg-red-500/10 p-2.5 rounded-xl border border-red-500/20">
-                      <p className="text-red-400 text-[11px] font-medium">PF Deduction</p>
-                      <p className="text-red-400 font-bold text-sm">{formatCurrency(p.deductions?.pf || 0)}</p>
-                    </div>
-                  </div>
+                  {/* Formula Summary Bar */}
+                  {(() => {
+                    const grossEarnings = Number(p.basic) + Number(p.hra) + Object.values(p.allowances || {}).reduce((a, b) => Number(a) + Number(b), 0);
+                    const totalDeductions = Object.values(p.deductions || {}).reduce((a, b) => Number(a) + Number(b), 0);
+                    return (
+                      <div className="mt-4 pt-4 border-t border-border space-y-3">
+                        <div className="flex flex-wrap items-center justify-between text-xs font-semibold px-1 text-text-secondary">
+                          <span className="text-emerald-400">Gross Earnings: {formatCurrency(grossEarnings)}</span>
+                          <span className="text-red-400">Total Deductions: -{formatCurrency(totalDeductions)}</span>
+                          <span className="text-indigo-400">Net Salary: {formatCurrency(grossEarnings - totalDeductions)}</span>
+                        </div>
+
+                        {/* Summary Grid Chips */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+                          <div className="bg-bg/60 p-2.5 rounded-xl border border-border">
+                            <p className="text-text-secondary text-[11px]">Basic</p>
+                            <p className="text-text-primary font-semibold text-sm">{formatCurrency(p.basic)}</p>
+                          </div>
+                          <div className="bg-bg/60 p-2.5 rounded-xl border border-border">
+                            <p className="text-text-secondary text-[11px]">HRA</p>
+                            <p className="text-text-primary font-semibold text-sm">{formatCurrency(p.hra)}</p>
+                          </div>
+
+                          {/* Dynamic Allowances */}
+                          {Object.entries(p.allowances || {}).map(([key, val]) => {
+                            const isHandMoney = key === "hand_money";
+                            return (
+                              <div
+                                key={key}
+                                className={
+                                  isHandMoney
+                                    ? "bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20"
+                                    : "bg-emerald-500/5 p-2.5 rounded-xl border border-emerald-500/15"
+                                }
+                              >
+                                <p className="text-emerald-400 text-[11px] font-medium capitalize">{key.replace("_", " ")}</p>
+                                <p className="text-emerald-400 font-bold text-sm">{formatCurrency(val)}</p>
+                              </div>
+                            );
+                          })}
+
+                          {/* Dynamic Deductions */}
+                          {Object.entries(p.deductions || {}).map(([key, val]) => {
+                            const isFee = key === "transaction_fee";
+                            const isSavings = key === "monthly_savings";
+                            const bgClass = isFee
+                              ? "bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 text-amber-400"
+                              : isSavings
+                              ? "bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20 text-purple-400"
+                              : "bg-red-500/10 p-2.5 rounded-xl border border-red-500/20 text-red-400";
+                            return (
+                              <div key={key} className={bgClass}>
+                                <p className="text-[11px] font-medium capitalize">{key.replace("_", " ")}</p>
+                                <p className="font-bold text-sm">{formatCurrency(val)}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </motion.div>
