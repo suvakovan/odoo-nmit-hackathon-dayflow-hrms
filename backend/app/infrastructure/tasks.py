@@ -21,6 +21,16 @@ def task_send_verification_email(self, to_email: str, token: str):
 
 
 @celery_app.task(bind=True, max_retries=3)
+def task_send_password_reset_email(self, to_email: str, token: str):
+    from app.infrastructure.email.mailer import send_password_reset_email
+    try:
+        send_password_reset_email(to_email, token)
+    except Exception as exc:
+        logger.error(f"Failed to send password reset email: {exc}")
+        raise self.retry(exc=exc, countdown=60)
+
+
+@celery_app.task(bind=True, max_retries=3)
 def task_send_leave_status_email(
     self, to_email: str, status: str, leave_type: str, comment: Optional[str] = None
 ):
@@ -97,14 +107,18 @@ def task_notify_admins(
 
 
 @celery_app.task
-def task_flag_missing_checkouts():
+def task_flag_missing_checkouts(db=None):
     from datetime import date, timedelta
     from app.infrastructure.db.session import SessionLocal
     from app.infrastructure.db import models as m
     import logging
 
     logger = logging.getLogger(__name__)
-    db = SessionLocal()
+    owns_db = False
+    if db is None:
+        db = SessionLocal()
+        owns_db = True
+
     try:
         yesterday = date.today() - timedelta(days=1)
         flagged_count = 0
@@ -137,7 +151,8 @@ def task_flag_missing_checkouts():
     except Exception as e:
         logger.error(f"Error running nightly check: {e}")
     finally:
-        db.close()
+        if owns_db:
+            db.close()
 
 
 @celery_app.task

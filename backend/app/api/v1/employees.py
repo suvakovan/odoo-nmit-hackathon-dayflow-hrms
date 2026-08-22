@@ -45,25 +45,15 @@ def update_my_profile(
 
 @router.get("/", response_model=List[EmployeeResponse])
 def list_employees(
-    department: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     current_user: m.UserModel = Depends(require_role(Role.ADMIN)),
     db: Session = Depends(get_db),
 ):
     svc = EmployeeService(db)
     try:
-        return svc.list_all(current_user, department, search)
+        return svc.list_all(current_user, search=search)
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
-
-
-@router.get("/departments", response_model=List[str])
-def list_departments(
-    current_user: m.UserModel = Depends(require_role(Role.ADMIN)),
-    db: Session = Depends(get_db),
-):
-    svc = EmployeeService(db)
-    return svc.list_departments()
 
 
 @router.get("/{employee_id}", response_model=EmployeeResponse)

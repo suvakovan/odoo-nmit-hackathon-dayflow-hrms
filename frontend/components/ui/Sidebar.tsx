@@ -39,17 +39,17 @@ export default function Sidebar() {
       initial={{ x: -20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="fixed left-0 top-0 h-full w-[260px] flex flex-col bg-card border-r border-border z-30"
+      className="fixed left-0 top-0 h-full w-[260px] flex flex-col bg-sidebar-bg border-r border-border text-sidebar-text z-30 shadow-md"
     >
       {/* Logo */}
-      <div className="p-6 border-b border-border">
+      <div className="p-5 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-md border border-white/20">
             <span className="text-white font-outfit font-bold text-sm">D</span>
           </div>
           <div>
-            <h1 className="text-white font-outfit font-bold text-lg leading-none">Dayflow</h1>
-            <p className="text-xs text-slate-500 mt-0.5">HRMS</p>
+            <h1 className="text-sidebar-text font-outfit font-bold text-lg leading-none">Dayflow</h1>
+            <p className="text-[11px] text-text-secondary mt-0.5 font-medium">HR Management</p>
           </div>
         </div>
       </div>
@@ -57,27 +57,32 @@ export default function Sidebar() {
       {/* Role Badge */}
       <div className="px-4 pt-4">
         <div className={cn(
-          "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold",
+          "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border",
           role === "ADMIN"
-            ? "bg-violet-500/10 border border-violet-500/20 text-violet-400"
-            : "bg-indigo-500/10 border border-indigo-500/20 text-indigo-400"
+            ? "bg-primary/10 border-primary/20 text-primary"
+            : "bg-table-header-bg border-border text-text-primary"
         )}>
-          <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-          {role === "ADMIN" ? "HR Admin" : "Employee"}
+          <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+          {role === "ADMIN" ? "HR Admin" : "Employee Workspace"}
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {links.map((link) => {
           const Icon = link.icon;
           const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
           return (
             <Link key={link.href} href={link.href} id={`nav-${link.label.toLowerCase().replace(/\s/g, "-")}`}>
-              <div className={cn("sidebar-link", isActive && "active")}>
-                <Icon className="w-4 h-4 flex-shrink-0" />
+              <div className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 border border-transparent",
+                isActive
+                  ? "bg-sidebar-active text-white font-semibold shadow-sm border-sidebar-active"
+                  : "text-sidebar-text hover:bg-sidebar-hover hover:text-text-primary"
+              )}>
+                <Icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-white" : "opacity-75")} />
                 <span className="flex-1">{link.label}</span>
-                {isActive && <ChevronRight className="w-3 h-3 opacity-50" />}
+                {isActive && <ChevronRight className="w-3 h-3 opacity-60 text-white" />}
               </div>
             </Link>
           );
@@ -85,20 +90,20 @@ export default function Sidebar() {
       </nav>
 
       {/* User Footer */}
-      <div className="p-3 border-t border-border">
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg glass-card mb-1">
-          <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+      <div className="p-3 border-t border-border bg-sidebar-hover/30">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface mb-1 border border-border">
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-xs">
             {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-medium truncate">{user?.email}</p>
-            <p className="text-slate-500 text-xs capitalize">{role?.toLowerCase()}</p>
+            <p className="text-text-primary text-xs font-medium truncate">{user?.email}</p>
+            <p className="text-text-secondary text-[10px] capitalize font-medium">{role?.toLowerCase()}</p>
           </div>
         </div>
         <button
           onClick={logout}
           id="logout-btn"
-          className="flex items-center gap-2 w-full px-3 py-2 text-slate-400 hover:text-red-400 text-sm rounded-lg hover:bg-red-500/5 transition-all duration-200"
+          className="flex items-center gap-2 w-full px-3 py-2 text-text-secondary hover:text-danger text-xs rounded-lg hover:bg-danger/10 transition-all duration-200 mt-1 font-medium"
         >
           <LogOut className="w-4 h-4" />
           Sign Out

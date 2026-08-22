@@ -1,7 +1,6 @@
-from datetime import date, datetime
 from sqlalchemy import (
     Boolean, Column, Date, DateTime, Enum as SAEnum,
-    ForeignKey, Integer, Numeric, String, Text, UniqueConstraint,
+    ForeignKey, Integer, JSON, Numeric, String, Text, UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -35,8 +34,6 @@ class EmployeeModel(Base):
     last_name = Column(String(100), nullable=False)
     phone = Column(String(20))
     address = Column(Text)
-    department = Column(String(100), nullable=False)
-    designation = Column(String(100), nullable=False)
     manager_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
     joining_date = Column(Date, nullable=False)
     profile_picture_url = Column(String(500))
@@ -124,8 +121,8 @@ class SalaryStructureModel(Base):
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
     basic = Column(Numeric(12, 2), nullable=False)
     hra = Column(Numeric(12, 2), default=0, nullable=False)
-    allowances = Column(JSONB, default=dict, nullable=False)
-    deductions = Column(JSONB, default=dict, nullable=False)
+    allowances = Column(JSON().with_variant(JSONB, "postgresql"), default=dict, nullable=False)
+    deductions = Column(JSON().with_variant(JSONB, "postgresql"), default=dict, nullable=False)
     effective_from = Column(Date, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
 

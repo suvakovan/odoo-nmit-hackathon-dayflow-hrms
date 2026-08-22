@@ -18,8 +18,10 @@ export default function EmployeeDashboardPage() {
     try {
       const res = await dashboardApi.employee();
       setData(res.data);
-    } catch {
-      toast.error("Failed to load dashboard");
+    } catch (err: any) {
+      if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+        toast.error("Failed to load dashboard");
+      }
     } finally {
       setLoading(false);
     }
@@ -70,24 +72,24 @@ export default function EmployeeDashboardPage() {
     <div className="animate-fade-in">
       <PageHeader
         title={`Good ${getGreeting()}, ${emp?.name?.split(" ")[0] ?? ""}!`}
-        subtitle={`${emp?.department} · ${emp?.designation}`}
+        subtitle="Employee Portal Overview"
       />
 
       {/* Check In/Out Card */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-6 mb-6 flex items-center justify-between"
+        className="glass-card p-6 mb-6 flex items-center justify-between shadow-sm"
       >
         <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${att?.today_checked_in ? "bg-emerald-500/15 border border-emerald-500/30" : "bg-slate-700/30 border border-slate-600/30"}`}>
-            <Clock className={`w-5 h-5 ${att?.today_checked_in ? "text-emerald-400" : "text-slate-500"}`} />
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${att?.today_checked_in ? "bg-success/15 border border-success/30" : "bg-table-header-bg border border-border"}`}>
+            <Clock className={`w-5 h-5 ${att?.today_checked_in ? "text-success" : "text-text-secondary"}`} />
           </div>
           <div>
-            <p className="text-white font-semibold">
+            <p className="text-text-primary font-semibold">
               {att?.today_checked_out ? "Checked Out" : att?.today_checked_in ? "Checked In" : "Not Checked In"}
             </p>
-            <p className="text-slate-400 text-sm">
+            <p className="text-text-secondary text-sm">
               {att?.today_status ? `Status: ${att.today_status}` : "Mark your attendance for today"}
             </p>
           </div>
@@ -132,20 +134,20 @@ export default function EmployeeDashboardPage() {
       {/* Leave Balances Full */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
-          <h3 className="text-white font-semibold font-outfit mb-4 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-indigo-400" /> Leave Balances
+          <h3 className="text-text-primary font-semibold font-outfit mb-4 flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-accent" /> Leave Balances
           </h3>
           <div className="space-y-3">
             {balances.map((b: any) => (
               <div key={b.type} className="flex items-center gap-4">
                 <div className="flex-1">
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-300">{b.type} Leave</span>
-                    <span className="text-slate-400">{b.remaining}/{b.total} days</span>
+                    <span className="text-text-primary font-medium">{b.type} Leave</span>
+                    <span className="text-text-secondary text-xs">{b.remaining}/{b.total} days</span>
                   </div>
-                  <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                  <div className="h-2 bg-table-header-bg rounded-full overflow-hidden border border-border">
                     <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all"
+                      className="h-full bg-accent rounded-full transition-all"
                       style={{ width: `${((b.used / b.total) * 100) || 0}%` }}
                     />
                   </div>
@@ -157,16 +159,16 @@ export default function EmployeeDashboardPage() {
         </div>
 
         <div className="glass-card p-6">
-          <h3 className="text-white font-semibold font-outfit mb-4 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-violet-400" /> Recent Leave Requests
+          <h3 className="text-text-primary font-semibold font-outfit mb-4 flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-accent" /> Recent Leave Requests
           </h3>
           <div className="space-y-2">
             {recentLeaves.length === 0 && <EmptyState title="No leave requests yet" />}
             {recentLeaves.map((l: any) => (
-              <div key={l.id} className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0">
+              <div key={l.id} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
                 <div>
-                  <p className="text-white text-sm font-medium">{l.type} Leave</p>
-                  <p className="text-slate-400 text-xs">{formatDate(l.start)} → {formatDate(l.end)}</p>
+                  <p className="text-text-primary text-sm font-medium">{l.type} Leave</p>
+                  <p className="text-text-secondary text-xs">{formatDate(l.start)} → {formatDate(l.end)}</p>
                 </div>
                 <span className={`badge ${getLeaveStatusBadge(l.status)}`}>{l.status}</span>
               </div>

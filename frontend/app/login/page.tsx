@@ -41,39 +41,32 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Background blobs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-violet-600/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-900/10 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-bg text-text-primary p-4">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md mx-4"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md"
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl gradient-primary mb-4 shadow-lg shadow-indigo-500/30">
-            <span className="text-white font-outfit font-bold text-xl">D</span>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-white mb-3 shadow-lg shadow-purple-900/20">
+            <span className="font-outfit font-bold text-2xl">D</span>
           </div>
-          <h1 className="text-3xl font-bold text-white font-outfit">Dayflow</h1>
-          <p className="text-slate-400 mt-1 text-sm">Human Resource Management System</p>
+          <h1 className="text-3xl font-bold text-text-primary font-outfit tracking-wide">Dayflow</h1>
+          <p className="text-text-secondary mt-1 text-sm">Human Resource Management System</p>
         </div>
 
         {/* Card */}
-        <div className="glass-card p-8">
-          <h2 className="text-xl font-semibold text-white mb-6 font-outfit">Welcome back</h2>
+        <div className="glass-card p-8 shadow-xl">
+          <h2 className="text-xl font-semibold text-text-primary mb-6 font-outfit">Welcome back</h2>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email */}
             <div>
               <label className="form-label">Email address</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary w-4 h-4" />
                 <input
                   {...register("email")}
                   type="email"
@@ -84,7 +77,7 @@ export default function LoginPage() {
                 />
               </div>
               {errors.email && (
-                <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>
+                <p className="text-danger text-xs mt-1">{errors.email.message}</p>
               )}
             </div>
 
@@ -92,7 +85,7 @@ export default function LoginPage() {
             <div>
               <label className="form-label">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary w-4 h-4" />
                 <input
                   {...register("password")}
                   type={showPassword ? "text" : "password"}
@@ -104,14 +97,19 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>
+                <p className="text-danger text-xs mt-1">{errors.password.message}</p>
               )}
+              <div className="flex justify-end mt-1.5">
+                <Link href="/forgot-password" className="text-xs text-primary hover:underline font-medium">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <button
@@ -131,8 +129,8 @@ export default function LoginPage() {
             </button>
 
             {/* Quick Demo Access */}
-            <div className="pt-3 border-t border-slate-800/80 flex flex-col gap-2">
-              <p className="text-xs text-center text-slate-500 font-medium">1-Click Quick Demo Access:</p>
+            <div className="pt-4 border-t border-border flex flex-col gap-2">
+              <p className="text-xs text-center text-text-secondary font-medium">1-Click Quick Demo Access:</p>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -142,7 +140,7 @@ export default function LoginPage() {
                     onSubmit({ email: "admin@dayflow.com", password: "AdminPassword123!" });
                   }}
                   disabled={isLoading}
-                  className="px-3 py-2.5 bg-indigo-950/60 hover:bg-indigo-900/60 border border-indigo-500/30 rounded-xl text-xs font-medium text-indigo-300 flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  className="px-3 py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-xl text-xs font-medium text-primary flex items-center justify-center gap-1.5 transition-all shadow-sm"
                 >
                   🛡️ Demo Admin
                 </button>
@@ -154,7 +152,7 @@ export default function LoginPage() {
                     onSubmit({ email: "employee@dayflow.com", password: "EmployeePassword123!" });
                   }}
                   disabled={isLoading}
-                  className="px-3 py-2.5 bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/50 rounded-xl text-xs font-medium text-slate-300 flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  className="px-3 py-2.5 bg-bg hover:bg-table-header-bg border border-border rounded-xl text-xs font-medium text-text-primary flex items-center justify-center gap-1.5 transition-all shadow-sm"
                 >
                   👤 Demo Employee
                 </button>
@@ -163,16 +161,16 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-slate-500 text-sm">
+            <p className="text-text-secondary text-sm">
               Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+              <Link href="/signup" className="text-accent hover:underline font-medium transition-colors">
                 Create account
               </Link>
             </p>
           </div>
         </div>
 
-        <p className="text-center text-slate-600 text-xs mt-6">
+        <p className="text-center text-text-secondary text-xs mt-6">
           © {new Date().getFullYear()} Dayflow HRMS. All rights reserved.
         </p>
       </motion.div>

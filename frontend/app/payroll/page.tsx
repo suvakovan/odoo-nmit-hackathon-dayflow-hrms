@@ -18,7 +18,11 @@ export default function PayrollPage() {
   useEffect(() => {
     payrollApi.mySalary()
       .then((r) => setSalary(r.data))
-      .catch(() => toast.error("Failed to load salary"))
+      .catch((err) => {
+        if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+          toast.error("Failed to load salary");
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -60,53 +64,53 @@ export default function PayrollPage() {
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 mb-6">
         {/* Net Salary Hero */}
-        <div className="text-center mb-8 pb-6 border-b border-white/[0.08]">
-          <p className="text-slate-400 text-sm mb-2">Monthly Net Salary</p>
+        <div className="text-center mb-8 pb-6 border-b border-border">
+          <p className="text-text-secondary text-sm mb-2">Monthly Net Salary</p>
           <p className="text-5xl font-bold font-outfit gradient-text">{formatCurrency(salary.net_salary)}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-6 mb-6">
           {/* Earnings */}
           <div>
-            <h3 className="text-xs text-slate-400 uppercase font-semibold mb-3">Earnings</h3>
+            <h3 className="text-xs text-text-secondary uppercase font-semibold mb-3">Earnings</h3>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-slate-300">Basic</span>
-                <span className="text-white">{formatCurrency(salary.basic)}</span>
+                <span className="text-text-secondary">Basic</span>
+                <span className="text-text-primary font-medium">{formatCurrency(salary.basic)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-300">HRA</span>
-                <span className="text-white">{formatCurrency(salary.hra)}</span>
+                <span className="text-text-secondary">HRA</span>
+                <span className="text-text-primary font-medium">{formatCurrency(salary.hra)}</span>
               </div>
               {Object.entries(salary.allowances).map(([k, v]) => (
                 <div key={k} className="flex justify-between text-sm">
-                  <span className="text-slate-400 capitalize">{k.replace("_", " ")}</span>
-                  <span className="text-white">{formatCurrency(v)}</span>
+                  <span className="text-text-secondary capitalize">{k.replace("_", " ")}</span>
+                  <span className="text-text-primary font-medium">{formatCurrency(v)}</span>
                 </div>
               ))}
-              <div className="flex justify-between text-sm pt-2 border-t border-white/[0.08] font-semibold">
-                <span className="text-emerald-400">Total Earnings</span>
-                <span className="text-emerald-400">{formatCurrency(Number(salary.basic) + Number(salary.hra) + totalAllowances)}</span>
+              <div className="flex justify-between text-sm pt-2 border-t border-border font-semibold">
+                <span className="text-emerald-500">Total Earnings</span>
+                <span className="text-emerald-500">{formatCurrency(Number(salary.basic) + Number(salary.hra) + totalAllowances)}</span>
               </div>
             </div>
           </div>
 
           {/* Deductions */}
           <div>
-            <h3 className="text-xs text-slate-400 uppercase font-semibold mb-3">Deductions</h3>
+            <h3 className="text-xs text-text-secondary uppercase font-semibold mb-3">Deductions</h3>
             <div className="space-y-2">
               {Object.entries(salary.deductions).map(([k, v]) => (
                 <div key={k} className="flex justify-between text-sm">
-                  <span className="text-slate-400 capitalize">{k.replace("_", " ")}</span>
-                  <span className="text-white">{formatCurrency(v)}</span>
+                  <span className="text-text-secondary capitalize">{k.replace("_", " ")}</span>
+                  <span className="text-text-primary font-medium">{formatCurrency(v)}</span>
                 </div>
               ))}
               {Object.keys(salary.deductions).length === 0 && (
-                <p className="text-slate-500 text-sm">No deductions</p>
+                <p className="text-text-secondary text-sm">No deductions</p>
               )}
-              <div className="flex justify-between text-sm pt-2 border-t border-white/[0.08] font-semibold">
-                <span className="text-red-400">Total Deductions</span>
-                <span className="text-red-400">{formatCurrency(totalDeductions)}</span>
+              <div className="flex justify-between text-sm pt-2 border-t border-border font-semibold">
+                <span className="text-red-500">Total Deductions</span>
+                <span className="text-red-500">{formatCurrency(totalDeductions)}</span>
               </div>
             </div>
           </div>
@@ -116,9 +120,9 @@ export default function PayrollPage() {
       {/* Download Payslip */}
       <div className="glass-card p-6 flex items-center justify-between">
         <div>
-          <p className="text-white font-semibold mb-1">Download Payslip</p>
+          <p className="text-text-primary font-semibold mb-1">Download Payslip</p>
           <div className="flex items-center gap-2">
-            <label className="text-slate-400 text-sm">Month:</label>
+            <label className="text-text-secondary text-sm">Month:</label>
             <input
               type="month"
               id="payslip-month"

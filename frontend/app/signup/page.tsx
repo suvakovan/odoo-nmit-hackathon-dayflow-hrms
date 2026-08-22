@@ -46,8 +46,9 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       await authApi.signup(data);
-      toast.success("Account created successfully! You can now log in.");
-      router.push("/login");
+      setSubmittedEmail(data.email);
+      setIsSubmitted(true);
+      toast.success("Account created! Check your email for verification.");
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || "Signup failed.");
     } finally {
@@ -57,38 +58,38 @@ export default function SignupPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center py-12 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center py-12 px-4 relative overflow-hidden bg-bg text-text-primary">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-600/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl" />
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-600/15 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-600/15 rounded-full blur-3xl" />
         </div>
 
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-lg mx-4"
+          className="w-full max-w-lg"
         >
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl gradient-primary mb-4 shadow-lg shadow-indigo-500/30">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 mb-4 shadow-lg shadow-purple-900/20">
               <Mail className="text-white w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-bold text-white font-outfit">Check your inbox</h1>
-            <p className="text-slate-400 mt-2 text-sm max-w-sm mx-auto">
-              We have sent a verification email to <strong className="text-white">{submittedEmail}</strong>. Please check your inbox and click the verification link.
+            <h1 className="text-3xl font-bold text-text-primary font-outfit">Check Your Inbox</h1>
+            <p className="text-text-secondary mt-2 text-sm max-w-sm mx-auto">
+              We have sent a verification email to <strong className="text-text-primary">{submittedEmail}</strong> via Brevo SMTP. Please check your inbox and click the verification link.
             </p>
           </div>
 
-          <div className="glass-card p-8 text-center space-y-4">
-            <p className="text-slate-500 text-sm">
-              Didn't receive the email? Check your spam folder or request a new link.
+          <div className="glass-card p-8 text-center space-y-4 shadow-xl border border-border">
+            <p className="text-text-secondary text-sm">
+              Didn&apos;t receive the email? Check your spam folder or request a new verification link below.
             </p>
             <button
               onClick={async () => {
                 setIsResending(true);
                 try {
                   await authApi.resendVerification(submittedEmail);
-                  toast.success("Verification email resent!");
+                  toast.success("Verification email resent successfully!");
                 } catch (err: any) {
                   toast.error(err?.response?.data?.detail || "Failed to resend email.");
                 } finally {
@@ -103,7 +104,7 @@ export default function SignupPage() {
             </button>
 
             <p className="text-sm mt-4">
-              <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
+              <Link href="/login" className="text-primary hover:underline font-medium">
                 Back to Sign In
               </Link>
             </p>
@@ -115,45 +116,40 @@ export default function SignupPage() {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-600/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center py-12 relative overflow-hidden bg-bg text-text-primary p-4">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-lg mx-4"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-lg"
       >
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl gradient-primary mb-4 shadow-lg shadow-indigo-500/30">
-            <span className="text-white font-outfit font-bold text-xl">D</span>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-white mb-3 shadow-lg shadow-purple-900/20">
+            <span className="font-outfit font-bold text-2xl">D</span>
           </div>
-          <h1 className="text-3xl font-bold text-white font-outfit">Create Account</h1>
-          <p className="text-slate-400 mt-1 text-sm">Join Dayflow HRMS</p>
+          <h1 className="text-3xl font-bold text-text-primary font-outfit tracking-wide">Create Account</h1>
+          <p className="text-text-secondary mt-1 text-sm">Join Dayflow HRMS</p>
         </div>
 
-        <div className="glass-card p-8">
+        <div className="glass-card p-8 shadow-xl">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Name row */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="form-label">First Name</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary w-4 h-4" />
                   <input {...register("first_name")} id="first_name" placeholder="John" className="form-input pl-9" />
                 </div>
-                {errors.first_name && <p className="text-red-400 text-xs mt-1">{errors.first_name.message}</p>}
+                {errors.first_name && <p className="text-danger text-xs mt-1">{errors.first_name.message}</p>}
               </div>
               <div>
                 <label className="form-label">Last Name</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary w-4 h-4" />
                   <input {...register("last_name")} id="last_name" placeholder="Doe" className="form-input pl-9" />
                 </div>
-                {errors.last_name && <p className="text-red-400 text-xs mt-1">{errors.last_name.message}</p>}
+                {errors.last_name && <p className="text-danger text-xs mt-1">{errors.last_name.message}</p>}
               </div>
             </div>
 
@@ -161,17 +157,17 @@ export default function SignupPage() {
             <div>
               <label className="form-label">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary w-4 h-4" />
                 <input {...register("email")} id="email" type="email" placeholder="you@company.com" className="form-input pl-9" />
               </div>
-              {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
+              {errors.email && <p className="text-danger text-xs mt-1">{errors.email.message}</p>}
             </div>
 
             {/* Password */}
             <div>
               <label className="form-label">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary w-4 h-4" />
                 <input
                   {...register("password")}
                   id="password"
@@ -179,14 +175,12 @@ export default function SignupPage() {
                   placeholder="Min 8 chars, uppercase, number, special"
                   className="form-input pl-9 pr-9"
                 />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary">
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>}
+              {errors.password && <p className="text-danger text-xs mt-1">{errors.password.message}</p>}
             </div>
-
-
 
             {/* Role */}
             <div>
@@ -202,9 +196,9 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <p className="text-center text-slate-500 text-sm mt-5">
+          <p className="text-center text-text-secondary text-sm mt-5">
             Already have an account?{" "}
-            <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">Sign in</Link>
+            <Link href="/login" className="text-accent hover:underline font-medium">Sign in</Link>
           </p>
         </div>
       </motion.div>

@@ -12,6 +12,8 @@ export interface UserResponse {
   email: string;
   role: Role;
   is_verified: boolean;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface TokenResponse {
@@ -31,8 +33,6 @@ export interface SignupRequest {
   role: Role;
   first_name: string;
   last_name: string;
-  department: string;
-  designation: string;
 }
 
 export interface Employee {
@@ -43,8 +43,6 @@ export interface Employee {
   last_name: string;
   phone?: string;
   address?: string;
-  department: string;
-  designation: string;
   manager_id?: number;
   joining_date: string;
   profile_picture_url?: string;

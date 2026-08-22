@@ -11,8 +11,6 @@ class EmployeeResponse(BaseModel):
     last_name: str
     phone: Optional[str] = None
     address: Optional[str] = None
-    department: str
-    designation: str
     manager_id: Optional[int] = None
     joining_date: date
     profile_picture_url: Optional[str] = None
@@ -38,8 +36,6 @@ class AdminEmployeeUpdateRequest(BaseModel):
     last_name: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
-    department: Optional[str] = None
-    designation: Optional[str] = None
     manager_id: Optional[int] = None
     joining_date: Optional[date] = None
     profile_picture_url: Optional[str] = None

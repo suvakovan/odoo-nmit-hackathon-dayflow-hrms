@@ -31,12 +31,11 @@ class EmployeeService:
     def list_all(
         self,
         requester: m.UserModel,
-        department: Optional[str] = None,
         search: Optional[str] = None,
     ) -> List[m.EmployeeModel]:
         if requester.role != Role.ADMIN:
             raise PermissionDeniedError("Only admins can list all employees.")
-        entities = self.repo.list_all(department=department, search=search)
+        entities = self.repo.list_all(search=search)
         ids = [e.id for e in entities]
         return self.db.query(m.EmployeeModel).filter(m.EmployeeModel.id.in_(ids)).all()
 
@@ -67,7 +66,3 @@ class EmployeeService:
         self.db.commit()
         self.db.refresh(obj)
         return obj
-
-    def list_departments(self) -> List[str]:
-        rows = self.db.query(m.EmployeeModel.department).distinct().all()
-        return sorted([r[0] for r in rows if r[0]])

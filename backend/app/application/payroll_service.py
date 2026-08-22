@@ -102,8 +102,6 @@ class PayrollService:
         pdf_bytes = generate_payslip_pdf(
             employee_name=f"{emp.first_name} {emp.last_name}",
             employee_code=emp.employee_code,
-            department=emp.department,
-            designation=emp.designation,
             month=month,
             basic=structure.basic,
             hra=structure.hra,

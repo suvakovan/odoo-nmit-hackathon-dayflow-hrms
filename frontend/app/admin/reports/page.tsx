@@ -16,7 +16,11 @@ export default function AdminReportsPage() {
   useEffect(() => {
     reportsApi.leaveSummary()
       .then((r) => setLeaveSummary(r.data))
-      .catch(() => toast.error("Failed to load leave summary"))
+      .catch((err) => {
+        if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+          toast.error("Failed to load leave summary");
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -67,8 +71,8 @@ export default function AdminReportsPage() {
               <FileText className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <p className="text-white font-semibold">Attendance Report</p>
-              <p className="text-slate-400 text-sm">Export all attendance data as CSV</p>
+              <p className="text-text-primary font-semibold">Attendance Report</p>
+              <p className="text-text-secondary text-sm">Export all attendance data as CSV</p>
             </div>
           </div>
           <button
@@ -87,8 +91,8 @@ export default function AdminReportsPage() {
             <BarChart2 className="w-5 h-5 text-violet-400" />
           </div>
           <div>
-            <p className="text-white font-semibold">Leave Summary</p>
-            <p className="text-slate-400 text-sm">Leave usage breakdown by department</p>
+            <p className="text-text-primary font-semibold">Leave Summary</p>
+            <p className="text-text-secondary text-sm">Organization-wide leave usage breakdown</p>
           </div>
         </div>
 
@@ -98,13 +102,13 @@ export default function AdminReportsPage() {
               <DollarSign className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-white font-semibold">Payroll Report</p>
-              <p className="text-slate-400 text-sm">Export monthly payroll sheet as CSV</p>
+              <p className="text-text-primary font-semibold">Payroll Report</p>
+              <p className="text-text-secondary text-sm">Export monthly payroll sheet as CSV</p>
               <div className="mt-2 flex items-center gap-2">
-                <label className="text-xs text-slate-400 font-semibold">Month:</label>
+                <label className="text-xs text-text-secondary font-semibold">Month:</label>
                 <input
                   type="month"
-                  className="form-input py-0.5 px-2 text-xs bg-slate-900 border-white/[0.08]"
+                  className="form-input py-0.5 px-2 text-xs"
                   value={payrollMonth}
                   onChange={(e) => setPayrollMonth(e.target.value)}
                 />
@@ -125,18 +129,17 @@ export default function AdminReportsPage() {
 
       {/* Leave Summary Table */}
       <div className="glass-card overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/[0.06]">
-          <h3 className="text-white font-semibold font-outfit">Leave Usage by Department</h3>
+        <div className="px-5 py-4 border-b border-border">
+          <h3 className="text-text-primary font-semibold font-outfit">Organization-Wide Leave Usage</h3>
         </div>
         {loading ? (
           <Spinner />
         ) : leaveSummary.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">No data available</div>
+          <div className="p-8 text-center text-text-secondary">No data available</div>
         ) : (
           <table className="data-table">
             <thead>
               <tr>
-                <th>Department</th>
                 <th>Leave Type</th>
                 <th>Allocated</th>
                 <th>Used</th>
@@ -146,16 +149,15 @@ export default function AdminReportsPage() {
             <tbody>
               {leaveSummary.map((r, i) => (
                 <tr key={i}>
-                  <td className="text-white font-medium">{r.department}</td>
                   <td><span className="badge badge-info">{r.leave_type}</span></td>
-                  <td className="text-slate-300">{r.total_allocated_days}d</td>
-                  <td className="text-slate-300">{r.total_used_days}d</td>
+                  <td className="text-text-secondary">{r.total_allocated_days}d</td>
+                  <td className="text-text-secondary">{r.total_used_days}d</td>
                   <td>
                     <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-24 bg-white/[0.06] rounded-full overflow-hidden">
+                      <div className="h-1.5 w-24 bg-border rounded-full overflow-hidden">
                         <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${r.utilization_pct}%` }} />
                       </div>
-                      <span className="text-slate-400 text-xs">{r.utilization_pct}%</span>
+                      <span className="text-text-secondary text-xs">{r.utilization_pct}%</span>
                     </div>
                   </td>
                 </tr>

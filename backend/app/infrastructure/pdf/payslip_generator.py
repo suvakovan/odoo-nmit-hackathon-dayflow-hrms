@@ -10,8 +10,6 @@ logger = logging.getLogger(__name__)
 def generate_payslip_pdf(
     employee_name: str,
     employee_code: str,
-    department: str,
-    designation: str,
     month: str,  # e.g. "2024-03"
     basic: Decimal,
     hra: Decimal,
@@ -67,7 +65,6 @@ def generate_payslip_pdf(
         # Employee Info
         info_data = [
             ["Employee Name", employee_name, "Employee Code", employee_code],
-            ["Department", department, "Designation", designation],
             ["Pay Period", month, "", ""],
         ]
         info_table = Table(info_data, colWidths=[4*cm, 7*cm, 4*cm, 5*cm])

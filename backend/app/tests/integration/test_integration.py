@@ -22,8 +22,6 @@ def test_admin_and_employee(db_session):
         employee_code="EMP_ADMIN",
         first_name="Admin",
         last_name="Test",
-        department="HR",
-        designation="Manager",
         joining_date=date.today()
     )
     db_session.add(admin_emp)
@@ -43,8 +41,6 @@ def test_admin_and_employee(db_session):
         employee_code="EMP_001",
         first_name="John",
         last_name="Doe",
-        department="Engineering",
-        designation="Developer",
         joining_date=date.today()
     )
     db_session.add(emp_1)
@@ -64,8 +60,6 @@ def test_admin_and_employee(db_session):
         employee_code="EMP_002",
         first_name="Jane",
         last_name="Smith",
-        department="Marketing",
-        designation="Designer",
         joining_date=date.today()
     )
     db_session.add(emp_2)
@@ -91,21 +85,21 @@ def test_document_upload_validation(client, test_admin_and_employee, db_session)
     # 1. Reject file types that are not PDF/PNG/JPEG
     files = {"file": ("test.txt", b"dummy content", "text/plain")}
     data = {"doc_type": "Resume"}
-    response = client.post("/employees/me/documents", headers=headers, files=files, data=data)
-    assert response.status_code == 400
-    assert "Invalid file type" in response.json()["detail"]
+    response = client.post(f"/api/v1/employees/{emp.id}/documents", headers=headers, files=files, data=data)
+    assert response.status_code == 422
+    assert "Unsupported content type" in response.json()["detail"]
 
     # 2. Reject file size > 5MB
     large_content = b"0" * (5 * 1024 * 1024 + 100) # Slightly larger than 5MB
     files = {"file": ("large.pdf", large_content, "application/pdf")}
-    response = client.post("/employees/me/documents", headers=headers, files=files, data=data)
-    assert response.status_code == 400
+    response = client.post(f"/api/v1/employees/{emp.id}/documents", headers=headers, files=files, data=data)
+    assert response.status_code == 422
     assert "exceeds maximum allowed size" in response.json()["detail"]
 
     # 3. Allow valid file (e.g. PDF under 5MB)
     valid_content = b"PDF dummy content"
     files = {"file": ("resume.pdf", valid_content, "application/pdf")}
-    response = client.post("/employees/me/documents", headers=headers, files=files, data=data)
+    response = client.post(f"/api/v1/employees/{emp.id}/documents", headers=headers, files=files, data=data)
     assert response.status_code == 200
     doc_id = response.json()["id"]
     assert doc_id is not None
@@ -124,7 +118,7 @@ def test_document_deletion_rules(client, test_admin_and_employee, db_session):
         employee_id=emp_1.id,
         doc_type="Resume",
         file_url="/tmp/resume.pdf",
-        created_at=datetime.now(timezone.utc) - timedelta(hours=1)
+        uploaded_at=datetime.now(timezone.utc) - timedelta(hours=1)
     )
     db_session.add(doc_recent)
 
@@ -133,29 +127,29 @@ def test_document_deletion_rules(client, test_admin_and_employee, db_session):
         employee_id=emp_1.id,
         doc_type="ID_Proof",
         file_url="/tmp/id.pdf",
-        created_at=datetime.now(timezone.utc) - timedelta(hours=25)
+        uploaded_at=datetime.now(timezone.utc) - timedelta(hours=25)
     )
     db_session.add(doc_old)
     db_session.commit()
 
     # 1. Non-owner/non-admin cannot delete
     headers_emp2 = get_auth_headers(emp_user_2)
-    response = client.delete(f"/employees/me/documents/{doc_recent.id}", headers=headers_emp2)
+    response = client.delete(f"/api/v1/employees/{emp_1.id}/documents/{doc_recent.id}", headers=headers_emp2)
     assert response.status_code == 403
 
     # 2. Owner can delete within 24 hours
     headers_emp1 = get_auth_headers(emp_user_1)
-    response = client.delete(f"/employees/me/documents/{doc_recent.id}", headers=headers_emp1)
+    response = client.delete(f"/api/v1/employees/{emp_1.id}/documents/{doc_recent.id}", headers=headers_emp1)
     assert response.status_code == 200
 
     # 3. Owner cannot delete after 24 hours
-    response = client.delete(f"/employees/me/documents/{doc_old.id}", headers=headers_emp1)
-    assert response.status_code == 400
+    response = client.delete(f"/api/v1/employees/{emp_1.id}/documents/{doc_old.id}", headers=headers_emp1)
+    assert response.status_code == 403
     assert "24 hours" in response.json()["detail"]
 
     # 4. Admin can delete anytime (even after 24 hours)
     headers_admin = get_auth_headers(admin_user)
-    response = client.delete(f"/employees/{emp_1.id}/documents/{doc_old.id}", headers=headers_admin)
+    response = client.delete(f"/api/v1/employees/{emp_1.id}/documents/{doc_old.id}", headers=headers_admin)
     assert response.status_code == 200
 
 
@@ -191,8 +185,8 @@ def test_attendance_nightly_flagging_behavior(test_admin_and_employee, db_sessio
     db_session.add(rec_complete)
     db_session.commit()
 
-    # Run the nightly task (calls local db_session import inside the task)
-    task_flag_missing_checkouts()
+    # Run the nightly task passing the test db_session
+    task_flag_missing_checkouts(db=db_session)
 
     # Re-fetch records
     db_session.expire_all()
@@ -235,7 +229,7 @@ def test_leave_balance_deduction_and_rejection(client, test_admin_and_employee, 
         "end_date": str(date.today() + timedelta(days=3)), # 3 days
         "remarks": "Exceeding vacation"
     }
-    response = client.post("/leave/", headers=headers, json=payload)
+    response = client.post("/api/v1/leave/", headers=headers, json=payload)
     assert response.status_code == 400
     assert "Insufficient" in response.json()["detail"]
 
@@ -246,13 +240,13 @@ def test_leave_balance_deduction_and_rejection(client, test_admin_and_employee, 
         "end_date": str(date.today() + timedelta(days=1)), # 1 day
         "remarks": "Short vacation"
     }
-    response = client.post("/leave/", headers=headers, json=payload_valid)
+    response = client.post("/api/v1/leave/", headers=headers, json=payload_valid)
     assert response.status_code == 201
     leave_id = response.json()["id"]
 
     # Approve this leave request as admin
     headers_admin = get_auth_headers(admin_user)
-    response_approve = client.patch(f"/leave/{leave_id}/approve", headers=headers_admin, json={"comment": "Approved!"})
+    response_approve = client.patch(f"/api/v1/leave/{leave_id}/approve", headers=headers_admin, json={"comment": "Approved!"})
     assert response_approve.status_code == 200
 
     # Verify balance was deducted (used_days should be 1.0)
@@ -267,6 +261,6 @@ def test_leave_balance_deduction_and_rejection(client, test_admin_and_employee, 
         "end_date": str(date.today() + timedelta(days=6)), # 2 days
         "remarks": "Exceeding remaining"
     }
-    response = client.post("/leave/", headers=headers, json=payload_exceed)
+    response = client.post("/api/v1/leave/", headers=headers, json=payload_exceed)
     assert response.status_code == 400
     assert "Insufficient" in response.json()["detail"]

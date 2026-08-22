@@ -11,34 +11,29 @@ import type { Employee } from "@/lib/types";
 
 export default function AdminEmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [departments, setDepartments] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [deptFilter, setDeptFilter] = useState("");
 
   const fetchEmployees = async () => {
     try {
       const res = await employeeApi.list({
         search: search || undefined,
-        department: deptFilter || undefined,
       });
       setEmployees(res.data);
-    } catch {
-      toast.error("Failed to load employees");
+    } catch (err: any) {
+      if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+        toast.error("Failed to load employees");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    employeeApi.getDepartments().then((r) => setDepartments(r.data)).catch(() => {});
-  }, []);
-
-  useEffect(() => {
     setLoading(true);
     const timeout = setTimeout(fetchEmployees, 300);
     return () => clearTimeout(timeout);
-  }, [search, deptFilter]);
+  }, [search]);
 
   return (
     <div className="animate-fade-in">
@@ -65,23 +60,12 @@ export default function AdminEmployeesPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select
-          id="dept-filter"
-          className="form-input w-48"
-          value={deptFilter}
-          onChange={(e) => setDeptFilter(e.target.value)}
-        >
-          <option value="">All Departments</option>
-          {departments.map((d) => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
       </div>
 
       {loading ? (
         <Spinner />
       ) : employees.length === 0 ? (
-        <EmptyState title="No employees found" subtitle="Try adjusting your search or filters." icon={<Users className="w-10 h-10" />} />
+        <EmptyState title="No employees found" subtitle="Try adjusting your search query." icon={<Users className="w-10 h-10" />} />
       ) : (
         <div className="glass-card overflow-hidden">
           <table className="data-table">
@@ -89,8 +73,6 @@ export default function AdminEmployeesPage() {
               <tr>
                 <th>Employee</th>
                 <th>Code</th>
-                <th>Department</th>
-                <th>Designation</th>
                 <th>Joined</th>
               </tr>
             </thead>
@@ -108,18 +90,12 @@ export default function AdminEmployeesPage() {
                         {emp.first_name[0]}{emp.last_name[0]}
                       </div>
                       <div>
-                        <p className="text-white font-medium text-sm">{emp.first_name} {emp.last_name}</p>
+                        <p className="text-text-primary font-medium text-sm">{emp.first_name} {emp.last_name}</p>
                       </div>
                     </div>
                   </td>
-                  <td><span className="font-mono text-xs text-indigo-400">{emp.employee_code}</span></td>
-                  <td>
-                    <span className="flex items-center gap-1 text-slate-300">
-                      <Building2 className="w-3 h-3 text-slate-500" />{emp.department}
-                    </span>
-                  </td>
-                  <td className="text-slate-300">{emp.designation}</td>
-                  <td className="text-slate-400 text-sm">{formatDate(emp.joining_date)}</td>
+                  <td><span className="font-mono text-xs text-accent">{emp.employee_code}</span></td>
+                  <td className="text-text-secondary text-sm">{formatDate(emp.joining_date)}</td>
                 </motion.tr>
               ))}
             </tbody>

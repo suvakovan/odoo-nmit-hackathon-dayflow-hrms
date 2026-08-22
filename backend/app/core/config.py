@@ -15,12 +15,13 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Email
-    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_HOST: str = "smtp-relay.brevo.com"
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     EMAILS_FROM_NAME: str = "Dayflow HRMS"
-    EMAILS_ENABLED: bool = False
+    EMAILS_FROM_ADDRESS: str = ""
+    EMAILS_ENABLED: bool = True
 
     # Redis / Celery
     REDIS_URL: str = "redis://localhost:6379/0"

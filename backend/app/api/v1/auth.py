@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from app.api.v1.schemas.auth_schemas import (
     SignupRequest, VerifyEmailRequest, LoginRequest,
     RefreshRequest, TokenResponse, UserResponse,
-    ResendVerificationRequest,
+    ResendVerificationRequest, ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from app.application.auth_service import AuthService
 from app.core.dependencies import get_current_user, oauth2_scheme
@@ -44,8 +45,6 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
             role=payload.role,
             first_name=payload.first_name,
             last_name=payload.last_name,
-            department=payload.department,
-            designation=payload.designation,
         )
     except ConflictError as e:
         raise HTTPException(status_code=409, detail=str(e))
@@ -105,12 +104,39 @@ def resend_verification(payload: ResendVerificationRequest, db: Session = Depend
     token = create_email_verification_token(user_model.id, payload.email)
 
     try:
-        from app.infrastructure.tasks import task_send_verification_email
-        task_send_verification_email.delay(payload.email, token)
-    except Exception:
-        pass
+        from app.infrastructure.email.mailer import send_verification_email
+        send_verification_email(payload.email, token)
+    except Exception as err:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to resend verification email: {err}")
 
     return {"message": "Verification email resent successfully."}
+
+
+@router.post("/forgot-password")
+def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    svc = AuthService(db)
+    try:
+        token = svc.request_password_reset(payload.email)
+        return {
+            "message": "Password reset instructions sent to your email address.",
+            "reset_token": token,
+            "reset_url": f"http://localhost:3000/reset-password?token={token}",
+        }
+    except NotFoundError:
+        # Return generic message to prevent email enumeration
+        return {"message": "If an account with that email exists, password reset instructions have been sent."}
+
+
+@router.post("/reset-password")
+def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    svc = AuthService(db)
+    try:
+        svc.reset_password(payload.token, payload.new_password)
+        return {"message": "Password reset successfully. You can now log in with your new password."}
+    except (ValidationError, NotFoundError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 
 

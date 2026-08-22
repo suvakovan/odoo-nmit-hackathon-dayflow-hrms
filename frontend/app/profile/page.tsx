@@ -45,7 +45,11 @@ export default function ProfilePage() {
         });
         fetchDocuments(r.data.id);
       })
-      .catch(() => toast.error("Failed to load profile"))
+      .catch((err) => {
+        if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+          toast.error("Failed to load profile");
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -140,8 +144,8 @@ export default function ProfilePage() {
           className={cn(
             "px-5 py-2.5 text-sm font-semibold rounded-xl transition-all cursor-pointer",
             activeTab === "info"
-              ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
-              : "text-slate-400 hover:text-white"
+              ? "bg-indigo-500/10 text-accent border border-indigo-500/20"
+              : "text-text-secondary hover:text-text-primary"
           )}
         >
           Profile Info
@@ -152,8 +156,8 @@ export default function ProfilePage() {
           className={cn(
             "px-5 py-2.5 text-sm font-semibold rounded-xl transition-all cursor-pointer",
             activeTab === "documents"
-              ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
-              : "text-slate-400 hover:text-white"
+              ? "bg-indigo-500/10 text-accent border border-indigo-500/20"
+              : "text-text-secondary hover:text-text-primary"
           )}
         >
           Documents
@@ -167,18 +171,16 @@ export default function ProfilePage() {
             <div className="w-24 h-24 rounded-2xl gradient-primary flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-indigo-500/20 mb-4">
               {profile.first_name[0]}{profile.last_name[0]}
             </div>
-            <h2 className="text-xl font-bold text-white font-outfit">{profile.first_name} {profile.last_name}</h2>
-            <p className="text-indigo-400 font-medium text-sm mt-1">{profile.designation}</p>
-            <p className="text-slate-400 text-xs mt-1">{profile.department}</p>
+            <h2 className="text-xl font-bold text-text-primary font-outfit">{profile.first_name} {profile.last_name}</h2>
             
-            <div className="w-full border-t border-border/40 my-4 pt-4 text-left space-y-2 text-xs text-slate-400">
+            <div className="w-full border-t border-border my-4 pt-4 text-left space-y-2 text-xs text-text-secondary">
               <div>
-                <span className="text-slate-500 block">Email</span>
-                <span className="text-white font-medium">{profile.first_name.toLowerCase()}.{profile.last_name.toLowerCase()}@company.com</span>
+                <span className="text-text-secondary block">Email</span>
+                <span className="text-text-primary font-medium">{profile.first_name.toLowerCase()}.{profile.last_name.toLowerCase()}@company.com</span>
               </div>
               <div>
-                <span className="text-slate-500 block">Joining Date</span>
-                <span className="text-white font-medium">{formatDate(profile.joining_date)}</span>
+                <span className="text-text-secondary block">Joining Date</span>
+                <span className="text-text-primary font-medium">{formatDate(profile.joining_date)}</span>
               </div>
             </div>
           </div>
@@ -188,12 +190,12 @@ export default function ProfilePage() {
         <div className="md:col-span-2">
           {activeTab === "info" && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 space-y-6">
-              <h3 className="text-lg font-bold text-white font-outfit">Personal Information</h3>
+              <h3 className="text-lg font-bold text-text-primary font-outfit">Personal Information</h3>
               
               <div className="space-y-4">
                 <div>
                   <label className="form-label flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5 text-slate-500" /> Phone Number
+                    <Phone className="w-3.5 h-3.5 text-text-secondary" /> Phone Number
                   </label>
                   <input
                     id="profile-phone"
@@ -207,7 +209,7 @@ export default function ProfilePage() {
 
                 <div>
                   <label className="form-label flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-slate-500" /> Address
+                    <MapPin className="w-3.5 h-3.5 text-text-secondary" /> Address
                   </label>
                   <textarea
                     id="profile-address"
@@ -221,7 +223,7 @@ export default function ProfilePage() {
 
                 <div>
                   <label className="form-label flex items-center gap-2">
-                    <User className="w-3.5 h-3.5 text-slate-500" /> Profile Picture URL
+                    <User className="w-3.5 h-3.5 text-text-secondary" /> Profile Picture URL
                   </label>
                   <input
                     id="profile-picture-url"
@@ -250,7 +252,7 @@ export default function ProfilePage() {
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               {/* Document Upload Form */}
               <div className="glass-card p-6">
-                <h3 className="text-lg font-bold text-white font-outfit mb-4">Upload Document</h3>
+                <h3 className="text-lg font-bold text-text-primary font-outfit mb-4">Upload Document</h3>
                 <form onSubmit={handleUpload} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -293,22 +295,22 @@ export default function ProfilePage() {
 
               {/* Uploaded Documents List */}
               <div className="glass-card p-6">
-                <h3 className="text-lg font-bold text-white font-outfit mb-4">My Documents</h3>
+                <h3 className="text-lg font-bold text-text-primary font-outfit mb-4">My Documents</h3>
                 {documents.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-sm">
+                  <div className="text-center py-8 text-text-secondary text-sm">
                     No documents uploaded yet.
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-border/40 text-slate-400">
+                        <tr className="border-b border-border text-text-secondary">
                           <th className="py-2.5">Document Type</th>
                           <th className="py-2.5">Uploaded Date</th>
                           <th className="py-2.5 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border/20 text-slate-200">
+                      <tbody className="divide-y divide-border text-text-primary">
                         {documents.map((doc) => {
                           const deletionAllowed = isDeletionAllowed(doc.uploaded_at);
                           // Prefix backend base URL if file_url is a relative path

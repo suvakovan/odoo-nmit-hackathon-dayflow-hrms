@@ -37,8 +37,10 @@ export default function LeavePage() {
       const [histRes, balRes] = await Promise.all([leaveApi.myHistory(), leaveApi.myBalance()]);
       setLeaves(histRes.data);
       setBalances(balRes.data);
-    } catch {
-      toast.error("Failed to load leave data");
+    } catch (err: any) {
+      if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+        toast.error("Failed to load leave data");
+      }
     } finally {
       setLoading(false);
     }
@@ -79,22 +81,22 @@ export default function LeavePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {balances.map((b) => (
           <div key={b.id} className="stat-card">
-            <p className="text-xs text-slate-400 uppercase font-semibold">{b.leave_type} Leave</p>
-            <p className="text-3xl font-bold text-white font-outfit">{b.remaining_days}<span className="text-slate-500 text-sm font-normal">/{b.total_days}</span></p>
-            <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full"
+            <p className="text-xs text-text-secondary uppercase font-semibold">{b.leave_type} Leave</p>
+            <p className="text-3xl font-bold text-text-primary font-outfit">{b.remaining_days}<span className="text-text-secondary text-sm font-normal">/{b.total_days}</span></p>
+            <div className="h-1.5 bg-border rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
                 style={{ width: `${(b.used_days / b.total_days) * 100 || 0}%` }} />
             </div>
-            <p className="text-xs text-slate-500">{b.used_days} days used</p>
+            <p className="text-xs text-text-secondary">{b.used_days} days used</p>
           </div>
         ))}
-        {balances.length === 0 && <p className="text-slate-500 col-span-3 text-sm">No leave balance configured for this year.</p>}
+        {balances.length === 0 && <p className="text-text-secondary col-span-3 text-sm">No leave balance configured for this year.</p>}
       </div>
 
       {/* Leave History */}
       <div className="glass-card overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/[0.06]">
-          <h3 className="text-white font-semibold font-outfit">Leave History</h3>
+        <div className="px-5 py-4 border-b border-border">
+          <h3 className="text-text-primary font-semibold font-outfit">Leave History</h3>
         </div>
         {leaves.length === 0 ? (
           <EmptyState title="No leave requests" subtitle="Your leave history will appear here." icon={<Calendar className="w-8 h-8" />} />
@@ -106,11 +108,11 @@ export default function LeavePage() {
             <tbody>
               {leaves.map((l, i) => (
                 <motion.tr key={l.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}>
-                  <td className="text-white font-medium">{l.leave_type}</td>
+                  <td className="text-text-primary font-medium">{l.leave_type}</td>
                   <td>{formatDate(l.start_date)}</td>
                   <td>{formatDate(l.end_date)}</td>
-                  <td className="text-slate-300">{l.total_days}</td>
-                  <td className="text-slate-400 text-sm truncate max-w-[160px]">{l.remarks || "—"}</td>
+                  <td className="text-text-secondary">{l.total_days}</td>
+                  <td className="text-text-secondary text-sm truncate max-w-[160px]">{l.remarks || "—"}</td>
                   <td><span className={`badge ${getLeaveStatusBadge(l.status)}`}>{l.status}</span></td>
                 </motion.tr>
               ))}

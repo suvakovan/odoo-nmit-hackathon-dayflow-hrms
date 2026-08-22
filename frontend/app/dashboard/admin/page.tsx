@@ -18,7 +18,11 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     dashboardApi.admin()
       .then((res) => setData(res.data))
-      .catch(() => toast.error("Failed to load dashboard"))
+      .catch((err) => {
+        if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+          toast.error("Failed to load dashboard");
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -47,7 +51,6 @@ export default function AdminDashboardPage() {
   if (loading) return <Spinner className="min-h-[60vh]" />;
 
   const stats = data?.stats;
-  const deptBreakdown = data?.department_breakdown || [];
   const pendingLeaves = data?.recent_pending_leaves || [];
 
   return (
@@ -83,57 +86,21 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Department Breakdown */}
-        <div className="glass-card p-6">
-          <h3 className="text-white font-semibold font-outfit mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-indigo-400" /> Department Breakdown
-          </h3>
-          {deptBreakdown.length > 0 ? (
-            <div className="flex items-center gap-6">
-              <ResponsiveContainer width={160} height={160}>
-                <PieChart>
-                  <Pie data={deptBreakdown} dataKey="count" nameKey="department" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
-                    {deptBreakdown.map((_: any, i: number) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ background: "hsl(222 47% 7%)", border: "1px solid hsl(216 34% 17%)", borderRadius: "8px", color: "white", fontSize: "12px" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 flex-1">
-                {deptBreakdown.map((d: any, i: number) => (
-                  <div key={d.department} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                      <span className="text-sm text-slate-300 truncate">{d.department}</span>
-                    </div>
-                    <span className="text-white text-sm font-semibold">{d.count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <EmptyState title="No department data" />
-          )}
-        </div>
-
+      <div className="grid grid-cols-1 gap-6">
         {/* Pending Leave Approvals */}
         <div className="glass-card p-6">
-          <h3 className="text-white font-semibold font-outfit mb-4 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-amber-400" /> Pending Leave Approvals
+          <h3 className="text-text-primary font-semibold font-outfit mb-4 flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-amber-500" /> Pending Leave Approvals
           </h3>
           {pendingLeaves.length === 0 ? (
             <EmptyState title="No pending requests" subtitle="All leave requests are processed!" icon={<CheckCircle className="w-8 h-8" />} />
           ) : (
             <div className="space-y-3">
               {pendingLeaves.map((l: any) => (
-                <div key={l.id} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
+                <div key={l.id} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
                   <div>
-                    <p className="text-white text-sm font-medium">{l.type} Leave</p>
-                    <p className="text-slate-400 text-xs">{formatDate(l.start)} → {formatDate(l.end)} · {l.days} day(s)</p>
+                    <p className="text-text-primary text-sm font-medium">{l.type} Leave</p>
+                    <p className="text-text-secondary text-xs">{formatDate(l.start)} → {formatDate(l.end)} · {l.days} day(s)</p>
                   </div>
                   <div className="flex gap-2">
                     <button

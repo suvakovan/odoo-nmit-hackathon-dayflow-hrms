@@ -8,10 +8,16 @@ from app.infrastructure.db.session import get_db
 from app.infrastructure.db.models import Base
 from app.core.config import settings
 
-# Ensure we have a database URL
-DATABASE_URL = settings.DATABASE_URL
+from sqlalchemy.pool import StaticPool
 
-engine = create_engine(DATABASE_URL)
+# Use SQLite in-memory database for tests
+DATABASE_URL = "sqlite:///:memory:"
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(scope="session", autouse=True)

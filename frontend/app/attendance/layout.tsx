@@ -13,7 +13,7 @@ export default function AttendanceLayout({ children }: { children: React.ReactNo
   if (isLoading) return <Spinner className="min-h-screen" />;
   if (!isAuthenticated) return null;
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-bg text-text-primary">
       <Sidebar />
       <div className="flex-1 ml-[260px] flex flex-col min-h-screen">
         <Header />

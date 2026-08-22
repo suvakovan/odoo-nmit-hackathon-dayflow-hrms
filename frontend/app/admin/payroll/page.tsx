@@ -20,8 +20,10 @@ export default function AdminPayrollPage() {
     try {
       const res = await payrollApi.all();
       setPayrolls(res.data);
-    } catch {
-      toast.error("Failed to load payroll data");
+    } catch (err: any) {
+      if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+        toast.error("Failed to load payroll data");
+      }
     } finally {
       setLoading(false);
     }
@@ -118,13 +120,13 @@ export default function AdminPayrollPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-6">
                     <div>
-                      <p className="text-slate-400 text-xs">Employee #{p.employee_id}</p>
-                      <p className="text-white font-semibold font-outfit text-lg">{formatCurrency(p.net_salary)}<span className="text-slate-400 text-sm font-normal"> / month</span></p>
-                      <p className="text-slate-400 text-xs">Effective from {formatDate(p.effective_from)}</p>
+                      <p className="text-text-secondary text-xs">Employee #{p.employee_id}</p>
+                      <p className="text-text-primary font-semibold font-outfit text-lg">{formatCurrency(p.net_salary)}<span className="text-text-secondary text-sm font-normal"> / month</span></p>
+                      <p className="text-text-secondary text-xs">Effective from {formatDate(p.effective_from)}</p>
                     </div>
                     <div className="flex gap-4 text-sm">
-                      <div><p className="text-slate-505 text-xs">Basic</p><p className="text-slate-300">{formatCurrency(p.basic)}</p></div>
-                      <div><p className="text-slate-505 text-xs">HRA</p><p className="text-slate-300">{formatCurrency(p.hra)}</p></div>
+                      <div><p className="text-text-secondary text-xs">Basic</p><p className="text-text-primary font-medium">{formatCurrency(p.basic)}</p></div>
+                      <div><p className="text-text-secondary text-xs">HRA</p><p className="text-text-primary font-medium">{formatCurrency(p.hra)}</p></div>
                     </div>
                   </div>
                   <div className="flex gap-2">

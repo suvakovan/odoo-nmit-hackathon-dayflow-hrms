@@ -58,8 +58,10 @@ export default function AdminAttendancePage() {
         employee_id: employeeId ? Number(employeeId) : undefined,
       });
       setRecords(res.data);
-    } catch {
-      toast.error("Failed to load attendance records");
+    } catch (err: any) {
+      if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+        toast.error("Failed to load attendance records");
+      }
     } finally {
       setLoading(false);
     }
@@ -70,8 +72,10 @@ export default function AdminAttendancePage() {
     try {
       const res = await attendanceApi.getFlagged();
       setFlaggedRecords(res.data);
-    } catch {
-      toast.error("Failed to load flagged attendance logs");
+    } catch (err: any) {
+      if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+        toast.error("Failed to load flagged attendance logs");
+      }
     } finally {
       setLoading(false);
     }
@@ -141,8 +145,8 @@ export default function AdminAttendancePage() {
           className={cn(
             "px-4 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer",
             activeTab === "all"
-              ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
-              : "text-slate-400 hover:text-white"
+              ? "bg-indigo-500/10 text-text-primary border border-indigo-500/20"
+              : "text-text-secondary hover:text-text-primary"
           )}
         >
           All Records
@@ -152,8 +156,8 @@ export default function AdminAttendancePage() {
           className={cn(
             "px-4 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
             activeTab === "flagged"
-              ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-              : "text-slate-400 hover:text-white"
+              ? "bg-amber-500/10 text-text-primary border border-amber-500/20"
+              : "text-text-secondary hover:text-text-primary"
           )}
         >
           <AlertTriangle className="w-3.5 h-3.5" />
@@ -237,18 +241,18 @@ export default function AdminAttendancePage() {
                       transition={{ delay: i * 0.01 }}
                       className={r.flagged ? "bg-amber-500/5 hover:bg-amber-500/10" : ""}
                     >
-                      <td className="text-white font-medium flex items-center gap-1.5">
+                      <td className="text-text-primary font-medium flex items-center gap-1.5">
                         {r.flagged && <span title="Flagged"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /></span>}
                         {formatDate(r.date)}
                       </td>
                       <td className="font-mono text-indigo-400 text-xs">{r.employee_id}</td>
-                      <td className="text-slate-300 text-sm">
+                      <td className="text-text-secondary text-sm">
                         {r.check_in ? formatDateTime(r.check_in) : "—"}
                       </td>
-                      <td className="text-slate-300 text-sm">
+                      <td className="text-text-secondary text-sm">
                         {r.check_out ? formatDateTime(r.check_out) : "—"}
                       </td>
-                      <td className="text-slate-300">
+                      <td className="text-text-secondary">
                         {r.working_hours != null ? `${r.working_hours}h` : "—"}
                       </td>
                       <td>
@@ -297,9 +301,9 @@ export default function AdminAttendancePage() {
                         animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.01 }}
                       >
-                        <td className="text-white font-medium">{formatDate(r.date)}</td>
+                        <td className="text-text-primary font-medium">{formatDate(r.date)}</td>
                         <td className="font-mono text-indigo-400 text-xs">{r.employee_id}</td>
-                        <td className="text-slate-300 text-sm">
+                        <td className="text-text-secondary text-sm">
                           {isEditing ? (
                             <input
                               type="datetime-local"
@@ -313,7 +317,7 @@ export default function AdminAttendancePage() {
                             "—"
                           )}
                         </td>
-                        <td className="text-slate-300 text-sm">
+                        <td className="text-text-secondary text-sm">
                           {isEditing ? (
                             <input
                               type="datetime-local"

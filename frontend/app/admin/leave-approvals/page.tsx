@@ -20,8 +20,10 @@ export default function AdminLeaveApprovalsPage() {
     try {
       const res = await leaveApi.all(filter ? { status: filter } : {});
       setLeaves(res.data);
-    } catch {
-      toast.error("Failed to load leave requests");
+    } catch (err: any) {
+      if (err?.response?.status !== 401 && err?.response?.status !== 403) {
+        toast.error("Failed to load leave requests");
+      }
     } finally {
       setLoading(false);
     }
@@ -63,8 +65,8 @@ export default function AdminLeaveApprovalsPage() {
             onClick={() => setFilter(s as any)}
             className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
               filter === s
-                ? "gradient-primary text-white shadow-lg shadow-indigo-500/20"
-                : "bg-white/[0.05] text-slate-400 hover:text-white border border-white/[0.08]"
+                ? "bg-primary text-white shadow-md shadow-purple-900/20"
+                : "bg-surface text-text-secondary hover:text-text-primary border border-border"
             }`}
           >
             {s || "All"}
@@ -87,15 +89,15 @@ export default function AdminLeaveApprovalsPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <span className={`badge ${getLeaveStatusBadge(leave.status)}`}>{leave.status}</span>
-                    <span className="text-white font-semibold text-sm">{leave.leave_type} Leave</span>
-                    <span className="text-slate-400 text-xs">· {leave.total_days} day(s)</span>
+                    <span className="text-text-primary font-semibold text-sm">{leave.leave_type} Leave</span>
+                    <span className="text-text-secondary text-xs">· {leave.total_days} day(s)</span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-slate-400">
+                  <div className="flex items-center gap-4 text-xs text-text-secondary">
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatDate(leave.start_date)} → {formatDate(leave.end_date)}</span>
                     {leave.remarks && <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" />{leave.remarks}</span>}
                   </div>
                   {leave.review_comment && (
-                    <p className="text-slate-500 text-xs mt-1">Comment: {leave.review_comment}</p>
+                    <p className="text-text-secondary text-xs mt-1">Comment: {leave.review_comment}</p>
                   )}
                 </div>
 

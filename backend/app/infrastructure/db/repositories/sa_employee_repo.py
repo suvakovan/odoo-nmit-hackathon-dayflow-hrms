@@ -22,8 +22,6 @@ class SAEmployeeRepository(IEmployeeRepository):
             email=obj.user.email if obj.user else "",
             phone=obj.phone,
             address=obj.address,
-            department=obj.department,
-            designation=obj.designation,
             manager_id=obj.manager_id,
             joining_date=obj.joining_date,
             profile_picture_url=obj.profile_picture_url,
@@ -41,10 +39,8 @@ class SAEmployeeRepository(IEmployeeRepository):
         obj = self.db.query(m.EmployeeModel).filter(m.EmployeeModel.employee_code == employee_code).first()
         return self._to_entity(obj) if obj else None
 
-    def list_all(self, department: Optional[str] = None, search: Optional[str] = None) -> List[Employee]:
+    def list_all(self, search: Optional[str] = None) -> List[Employee]:
         q = self.db.query(m.EmployeeModel)
-        if department:
-            q = q.filter(m.EmployeeModel.department == department)
         if search:
             q = q.filter(
                 or_(
@@ -63,8 +59,6 @@ class SAEmployeeRepository(IEmployeeRepository):
             last_name=employee.last_name,
             phone=employee.phone,
             address=employee.address,
-            department=employee.department,
-            designation=employee.designation,
             manager_id=employee.manager_id,
             joining_date=employee.joining_date,
             profile_picture_url=employee.profile_picture_url,
@@ -80,8 +74,6 @@ class SAEmployeeRepository(IEmployeeRepository):
         obj.last_name = employee.last_name
         obj.phone = employee.phone
         obj.address = employee.address
-        obj.department = employee.department
-        obj.designation = employee.designation
         obj.manager_id = employee.manager_id
         obj.joining_date = employee.joining_date
         obj.profile_picture_url = employee.profile_picture_url

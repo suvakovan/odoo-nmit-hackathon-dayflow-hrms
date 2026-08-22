@@ -5,6 +5,8 @@ export const authApi = {
   signup: (data: SignupRequest) => api.post("/auth/signup", data),
   verifyEmail: (token: string) => api.post("/auth/verify-email", { token }),
   resendVerification: (email: string) => api.post("/auth/resend-verification", { email }),
+  forgotPassword: (email: string) => api.post("/auth/forgot-password", { email }),
+  resetPassword: (token: string, new_password: string) => api.post("/auth/reset-password", { token, new_password }),
   login: (data: LoginRequest) =>
     api.post<TokenResponse>("/auth/login", data),
   refresh: (refresh_token: string) =>
@@ -15,11 +17,10 @@ export const authApi = {
 export const employeeApi = {
   getMe: () => api.get("/employees/me"),
   updateMe: (data: object) => api.patch("/employees/me", data),
-  list: (params?: { department?: string; search?: string }) =>
+  list: (params?: { search?: string }) =>
     api.get("/employees/", { params }),
   getById: (id: number) => api.get(`/employees/${id}`),
   update: (id: number, data: object) => api.patch(`/employees/${id}`, data),
-  getDepartments: () => api.get<string[]>("/employees/departments"),
   uploadDocument: (id: number, file: File, doc_type?: string) => {
     const form = new FormData();
     form.append("file", file);
@@ -41,7 +42,6 @@ export const attendanceApi = {
     employee_id?: number;
     date_from?: string;
     date_to?: string;
-    department?: string;
   }) => api.get("/attendance/", { params }),
   getFlagged: () => api.get("/attendance/flagged"),
   correctTime: (id: number, data: { check_in?: string; check_out?: string }) =>
@@ -101,10 +101,9 @@ export const reportsApi = {
     date_from?: string;
     date_to?: string;
     employee_id?: number;
-    department?: string;
     format?: "csv" | "json";
   }) => api.get("/reports/attendance", { params, responseType: "blob" }),
-  leaveSummary: (params?: { year?: number; format?: "csv" | "json"; department?: string }) =>
+  leaveSummary: (params?: { year?: number; format?: "csv" | "json" }) =>
     api.get("/reports/leave-summary", {
       params,
       responseType: params?.format === "csv" ? "blob" : "json",

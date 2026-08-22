@@ -77,8 +77,6 @@ class DashboardService:
                 "id": emp.id,
                 "name": f"{emp.first_name} {emp.last_name}",
                 "employee_code": emp.employee_code,
-                "department": emp.department,
-                "designation": emp.designation,
                 "joining_date": str(emp.joining_date),
                 "profile_picture_url": emp.profile_picture_url,
             },
@@ -133,13 +131,6 @@ class DashboardService:
         )
         today_absent = total_employees - today_present
 
-        # Department breakdown
-        dept_counts = (
-            self.db.query(m.EmployeeModel.department, func.count(m.EmployeeModel.id))
-            .group_by(m.EmployeeModel.department)
-            .all()
-        )
-
         # Recent leave requests
         recent_pending = (
             self.db.query(m.LeaveRequestModel)
@@ -166,9 +157,6 @@ class DashboardService:
                 "today_absent": today_absent,
                 "attendance_rate": round((today_present / max(total_employees, 1)) * 100, 1),
             },
-            "department_breakdown": [
-                {"department": dept, "count": cnt} for dept, cnt in dept_counts
-            ],
             "recent_pending_leaves": [
                 {
                     "id": l.id,

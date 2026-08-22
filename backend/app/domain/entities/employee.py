@@ -14,8 +14,6 @@ class Employee:
     email: str
     phone: Optional[str]
     address: Optional[str]
-    department: str
-    designation: str
     manager_id: Optional[int]
     joining_date: date
     profile_picture_url: Optional[str]

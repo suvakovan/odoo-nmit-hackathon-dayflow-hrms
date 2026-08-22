@@ -37,7 +37,6 @@ def attendance_report(
             {
                 "employee_code": emp.employee_code,
                 "employee_name": f"{emp.first_name} {emp.last_name}",
-                "department": emp.department,
                 "date": str(att.date),
                 "check_in": str(att.check_in) if att.check_in else None,
                 "check_out": str(att.check_out) if att.check_out else None,
@@ -49,7 +48,7 @@ def attendance_report(
     # CSV
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Employee Code", "Name", "Department", "Date", "Check-In", "Check-Out", "Status"])
+    writer.writerow(["Employee Code", "Name", "Date", "Check-In", "Check-Out", "Status"])
     for att, emp in rows:
         hours = ""
         if att.check_in and att.check_out:
@@ -57,7 +56,6 @@ def attendance_report(
         writer.writerow([
             emp.employee_code,
             f"{emp.first_name} {emp.last_name}",
-            emp.department,
             str(att.date),
             str(att.check_in) if att.check_in else "",
             str(att.check_out) if att.check_out else "",
@@ -79,26 +77,23 @@ def leave_summary(
 ):
     rows = (
         db.query(
-            m.EmployeeModel.department,
             m.LeaveBalanceModel.leave_type,
             func.sum(m.LeaveBalanceModel.used_days).label("total_used"),
             func.sum(m.LeaveBalanceModel.total_days).label("total_allocated"),
         )
-        .join(m.LeaveBalanceModel, m.EmployeeModel.id == m.LeaveBalanceModel.employee_id)
         .filter(m.LeaveBalanceModel.year == year)
-        .group_by(m.EmployeeModel.department, m.LeaveBalanceModel.leave_type)
+        .group_by(m.LeaveBalanceModel.leave_type)
         .all()
     )
 
     return [
         {
-            "department": dept,
             "leave_type": lt.value,
             "total_used_days": int(used or 0),
             "total_allocated_days": int(allocated or 0),
             "utilization_pct": round((int(used or 0) / max(int(allocated or 1), 1)) * 100, 1),
         }
-        for dept, lt, used, allocated in rows
+        for lt, used, allocated in rows
     ]
 
 
@@ -117,7 +112,7 @@ def payroll_report(
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "Employee Code", "Name", "Department", "Designation",
+        "Employee Code", "Name",
         "Basic Salary", "HRA", "Total Allowances", "Total Deductions", "Net Salary", "Month"
     ])
     
@@ -131,8 +126,6 @@ def payroll_report(
         writer.writerow([
             emp.employee_code,
             f"{emp.first_name} {emp.last_name}",
-            emp.department,
-            emp.designation,
             f"{structure.basic:.2f}",
             f"{structure.hra:.2f}",
             f"{total_allowances:.2f}",

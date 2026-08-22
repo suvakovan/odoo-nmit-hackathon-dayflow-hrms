@@ -46,8 +46,6 @@ class AuthService:
         role: Role,
         first_name: str,
         last_name: str,
-        department: str,
-        designation: str,
     ) -> Tuple[m.UserModel, str]:
         """Register a new user and create their employee profile."""
         existing = self.user_repo.get_by_email(email)
@@ -56,7 +54,7 @@ class AuthService:
 
         hashed = hash_password(password)
         user = self.user_repo.create(
-            User(id=None, email=email, hashed_password=hashed, role=role, is_verified=True)
+            User(id=None, email=email, hashed_password=hashed, role=role, is_verified=False)
         )
 
         # Create employee profile automatically
@@ -74,8 +72,6 @@ class AuthService:
                 email=email,
                 phone=None,
                 address=None,
-                department=department,
-                designation=designation,
                 manager_id=None,
                 joining_date=datetime.date.today(),
                 profile_picture_url=None,
@@ -102,12 +98,21 @@ class AuthService:
         # Generate email verification token
         token = create_email_verification_token(user.id, email)
 
-        # Fire Celery task (non-blocking)
+        # Send verification email via SMTP
+        sent = False
         try:
-            from app.infrastructure.tasks import task_send_verification_email
-            task_send_verification_email.delay(email, token)
-        except Exception:
-            pass  # Don't fail signup if Celery is unavailable in dev
+            from app.infrastructure.email.mailer import send_verification_email
+            sent = send_verification_email(email, token)
+        except Exception as err:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to send verification email during signup: {err}")
+
+        if not sent:
+            import logging
+            logging.getLogger(__name__).warning(
+                f"[EMAIL DELIVERY WARNING] Verification email could not be sent to {email}. "
+                f"Verify URL for dev: http://localhost:3000/verify-email?token={token}"
+            )
 
         user_model = self.db.query(m.UserModel).filter(m.UserModel.id == user.id).first()
         return user_model, token
@@ -128,11 +133,46 @@ class AuthService:
         user_model = self.db.query(m.UserModel).filter(m.UserModel.id == updated.id).first()
         return user_model
 
+    def request_password_reset(self, email: str) -> str:
+        from app.core.security import create_password_reset_token
+        user = self.user_repo.get_by_email(email)
+        if not user:
+            raise NotFoundError("User")
+
+        token = create_password_reset_token(user.id, user.email)
+        try:
+            from app.infrastructure.tasks import task_send_password_reset_email
+            task_send_password_reset_email.delay(user.email, token)
+        except Exception:
+            pass
+
+        return token
+
+    def reset_password(self, token: str, new_password: str) -> m.UserModel:
+        from app.core.security import verify_password_reset_token, hash_password
+        payload = verify_password_reset_token(token)
+        if not payload or "email" not in payload:
+            raise ValidationError("Invalid or expired password reset token.")
+
+        email = payload["email"]
+        user = self.user_repo.get_by_email(email)
+        if not user:
+            raise NotFoundError("User")
+
+        user.hashed_password = hash_password(new_password)
+        updated = self.user_repo.update(user)
+
+        user_model = self.db.query(m.UserModel).filter(m.UserModel.id == updated.id).first()
+        return user_model
+
 
     def login(self, email: str, password: str) -> dict:
         user = self.user_repo.get_by_email(email)
         if not user or not verify_password(password, user.hashed_password):
             raise AuthenticationError("Invalid email or password.")
+
+        if not user.is_verified:
+            raise AuthenticationError("Please verify your email address before logging in. Check your inbox for the verification link.")
 
         access_token = create_access_token(str(user.id), {"role": user.role.value})
         refresh_token = create_refresh_token(str(user.id))
