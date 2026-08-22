@@ -16,7 +16,7 @@ def send_email(
     text_body: Optional[str] = None,
 ) -> bool:
     """
-    Send an email via SMTP.
+    Send an email via Brevo API or SMTP.
     Returns True on success, False otherwise.
     In dev mode (EMAILS_ENABLED=false), logs the email instead of sending.
     """
@@ -33,6 +33,36 @@ def send_email(
         )
         return False
 
+    # Attempt 1: If key looks like a Brevo API/SMTP Key, try Brevo v3 HTTP API first
+    if settings.SMTP_PASSWORD.startswith(("xsmtpsib-", "xkeysib-")):
+        try:
+            import urllib.request, json
+            url = "https://api.brevo.com/v3/smtp/email"
+            payload = {
+                "sender": {"name": settings.EMAILS_FROM_NAME, "email": from_address},
+                "to": [{"email": to_email}],
+                "subject": subject,
+                "htmlContent": html_body,
+            }
+            if text_body:
+                payload["textContent"] = text_body
+
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "api-key": settings.SMTP_PASSWORD,
+            }
+            req = urllib.request.Request(
+                url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status in (200, 201, 202):
+                    logger.info(f"Email successfully sent to {to_email} via Brevo API: {subject}")
+                    return True
+        except Exception as api_err:
+            logger.warning(f"Brevo API send attempt failed: {api_err}. Trying standard SMTP...")
+
+    # Attempt 2: Standard SMTP sending
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
@@ -59,7 +89,7 @@ def send_email(
         return True
     except Exception as e:
         logger.error(
-            f"Failed to send email to {to_email}: {e}. Check SMTP credentials in backend/.env"
+            f"Failed to send email to {to_email}: {e}. Please ensure your Brevo API/SMTP key in backend/.env is active."
         )
         return False
 
