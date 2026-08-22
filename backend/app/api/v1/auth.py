@@ -51,9 +51,10 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail=str(e))
 
     return {
-        "message": "Account created. Please check your email to verify your account.",
+        "message": "Account created successfully. You can log in immediately.",
         "user_id": user_model.id,
-        "verification_token": token,  # exposed for dev convenience
+        "verification_token": token,
+        "verification_url": f"http://localhost:3000/verify-email?token={token}",
     }
 
 
