@@ -1,139 +1,168 @@
 # Dayflow HRMS
 
-> A full-stack **Human Resource Management System** built with FastAPI, Next.js App Router, PostgreSQL, and Docker Compose.
+> **Every workday, perfectly aligned.**  
+> A production-grade, full-stack **Human Resource Management System** built with **FastAPI**, **Next.js 14 App Router**, **PostgreSQL**, **Redis**, **Celery**, and **Docker Compose**.
 
-![Stack](https://img.shields.io/badge/FastAPI-0.115-green) ![Next.js](https://img.shields.io/badge/Next.js-14-black) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Docker Desktop (with Compose v2)
-- Node.js 20+ (for local frontend dev)
-
-### Run with Docker Compose
-
-```bash
-# 1. Clone and navigate
-cd dayflow-hrms
-
-# 2. Copy env files
-cp .env.example .env
-cp backend/.env.example backend/.env
-
-# 3. Start all services
-docker compose up --build
-
-# 4. Run database migrations (first time only)
-docker compose exec backend alembic upgrade head
-
-# 5. Access the app
-# Frontend:  http://localhost:3000
-# Backend:   http://localhost:8000
-# API Docs:  http://localhost:8000/docs
-```
+![Stack](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi)
+![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker)
 
 ---
 
-## 🏗️ Architecture
+## ✨ Key Features & SRS Compliance
 
-```
-Presentation (Next.js 14 App Router)
-      ↓ HTTP/JSON + JWT
-API Layer (FastAPI routers + Pydantic schemas)
-      ↓
-Application Layer (Services / Use Cases) ← Service-level auth guards
-      ↓
-Domain Layer (pure Python entities + business rules, zero DB imports)
-      ↓
-Infrastructure Layer (SQLAlchemy, PostgreSQL, Celery, Redis)
-```
+### 🔐 1. Authentication & Authorization
+* **Secure Sign Up:** Register with custom **Employee ID**, Email, Password, and Role (`Employee` vs `Admin / HR Officer`).
+* **Password Security Rules:** Enforces 8+ characters with uppercase letter, number, and special character validation.
+* **Email Verification:** Asynchronous email verification workflow via SMTP/Brevo with token validation.
+* **JWT Session Management:** Secure access and refresh tokens with role-garded authorization.
 
-### Clean Architecture Rules
-- **Domain entities** are pure Python `@dataclass` — no SQLAlchemy imports
-- **Services** depend on **repository interfaces (ABCs)** — never on concrete implementations
-- **Role/ownership checks** enforced at the **service layer**, not just routers
-- **Routers** do marshalling only — zero business logic
+### 📊 2. Role-Based Dashboards
+* **Employee Dashboard:** Quick-access metric cards for attendance check-in/out status, leave balances, recent activity feeds, and profile navigation.
+* **Admin / HR Dashboard:** Organization-wide metrics, active employee counts, today's attendance summary, pending leave review queues, and quick employee search.
+
+### 👤 3. Employee Profile & Document Management
+* **Comprehensive Profile Views:** 4 dedicated tabs — **Personal Info**, **Job Details** (Department, Designation, Manager, Joining Date), **Salary Structure**, and **Documents**.
+* **Self-Service & Admin Edits:** Employees can update contact info, address, and profile photo; Admins possess full editing capabilities for organizational attributes.
+* **Document Locker:** Upload and manage ID Proofs, Qualification Certificates, and Employment Contracts (PDF, JPG, PNG up to 5MB) with a 24-hour self-deletion safeguard.
+
+### ⏱️ 4. Attendance Tracking & Monitoring
+* **Real-time Clock In / Clock Out:** One-click attendance logging with precise timestamps and working hours computation.
+* **Status Classification:** Automatic status assignment (`Present`, `Absent`, `Half-day`, `Leave`).
+* **Daily & Weekly Views:** Toggleable view presets for daily tracking or 7-day weekly attendance logs.
+* **Admin Correction & Audit Logs:** Admins can adjust attendance times with automated email notifications dispatched to employees.
+
+### 🌴 5. Leave & Time-Off Management
+* **Multi-Type Leave Requests:** Apply for **Paid**, **Sick**, or **Unpaid** leave with flexible date ranges and custom remarks.
+* **Real-Time Entitlement Tracking:** Auto-deducting leave balance tracker per calendar year.
+* **Approval Workflows:** Admins review, approve, or reject requests with reviewer comments. Approved leaves automatically reflect as `LEAVE` on attendance logs.
+
+### 💰 6. Payroll & Salary Management
+* **Transparent Salary Structures:** Full breakdown of Basic Salary, HRA, **Hand Money (Cash Allowance)**, **Transaction Fees**, **Monthly Savings**, PF Deductions, Gross Earnings, and Net Salary.
+* **Self-Healing Data Engine:** Automatic migration helper populating legacy records with consistent payroll default fields.
+* **PDF Payslip Generation:** Dynamic pixel-perfect PDF payslip generation using ReportLab for instant employee download.
+
+### 📧 7. Automated Email & Notification Center
+* **Brevo/SMTP Integration:** High-performance background task queue (Celery + Redis) triggering HTML emails for:
+  - Account registration & verification
+  - Salary structure updates by HR (with full earnings breakdown)
+  - Attendance check-in/out and HR correction alerts
+  - Leave approval/rejection updates
+* **In-App Notification Bell:** Real-time unread counter and notification feed in the app header.
+
+### 📈 8. Analytics & Report Exports
+* **Export Monthly Payroll CSV:** Download comprehensive payroll spreadsheets by month.
+* **Export Attendance CSV:** Download date-filtered attendance records.
+* **Organization Leave Analytics:** Track organization-wide leave usage and utilization percentages.
 
 ---
 
-## 📁 Folder Structure
+## 🏗️ Architecture & Technical Stack
+
+```
+   Presentation Layer (Next.js 14 App Router + TailwindCSS + Framer Motion)
+                          ↓ HTTP / JSON API + JWT
+       API Layer (FastAPI Routers + Pydantic v2 Schemas + CORS)
+                          ↓
+   Application Layer (Domain Services & Business Use-Cases + Auth Guards)
+                          ↓
+      Domain Layer (Pure Python Dataclasses & Entities — Zero DB Coupling)
+                          ↓
+  Infrastructure Layer (SQLAlchemy ORM + PostgreSQL 16 + Redis + Celery)
+```
+
+### Key Architectural Highlights
+* **Clean Architecture:** Strict separation of Concerns — Domain models have zero database dependencies.
+* **Service-Level Guards:** Access control and ownership rules strictly validated in service layers.
+* **Self-Healing Database Migrations:** Dynamic payload completion prevents missing default values on legacy schemas.
+
+---
+
+## 📁 Repository Structure
 
 ```
 dayflow-hrms/
 ├── backend/
 │   ├── app/
-│   │   ├── core/          # config, security, dependencies, exceptions
-│   │   ├── domain/        # pure entities, enums, repo interfaces
-│   │   ├── application/   # 7 service modules
-│   │   ├── infrastructure/ # SQLAlchemy models, repos, email, PDF, Celery
-│   │   └── api/v1/        # FastAPI routers + Pydantic schemas
-│   ├── alembic/           # database migrations
+│   │   ├── core/           # Security, JWT, config, database session
+│   │   ├── domain/         # Pure entities (Employee, Payroll, Attendance, Leave)
+│   │   ├── application/    # Business services (Auth, Employee, Payroll, Attendance, Leave)
+│   │   ├── infrastructure/ # SQLAlchemy models, Mailer, PDF Generator, Celery Tasks
+│   │   └── api/v1/         # FastAPI endpoints & Pydantic request/response schemas
+│   ├── alembic/            # Database migration scripts
 │   └── Dockerfile
 ├── frontend/
-│   ├── app/               # Next.js App Router pages
-│   ├── components/ui/     # Sidebar, StatCard, Badge, Modal...
-│   ├── lib/api/           # typed API client wrappers
-│   ├── lib/auth/          # AuthContext + useAuth()
-│   └── lib/types/         # TS types mirroring Pydantic schemas
-└── docker-compose.yml
+│   ├── app/                # Next.js App Router (Dashboard, Profile, Attendance, Leave, Payroll, Admin)
+│   ├── components/         # Reusable UI components (Sidebar, StatCard, PageHeader, Modals)
+│   ├── lib/api/            # Typed Axios API client wrappers
+│   ├── lib/auth/           # AuthContext & Session hooks
+│   └── lib/types/          # TypeScript interfaces
+└── docker-compose.yml      # Orchestration for Backend, Frontend, DB, Redis, Celery Worker
 ```
 
 ---
 
-## 👤 Roles
+## 🚀 Quick Start with Docker
 
-| Role | Access |
-|---|---|
-| `ADMIN` | Full access — manage employees, approve leave, update payroll, view reports |
-| `EMPLOYEE` | Own profile, attendance (check-in/out), apply leave, view payslip |
+### Prerequisites
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Compose v2)
+* Node.js 20+ (optional, for local frontend iteration)
 
----
-
-## 📡 API Reference
-
-| Module | Base Path |
-|---|---|
-| Auth | `/api/v1/auth` |
-| Employees | `/api/v1/employees` |
-| Attendance | `/api/v1/attendance` |
-| Leave | `/api/v1/leave` |
-| Payroll | `/api/v1/payroll` |
-| Dashboard | `/api/v1/dashboard` |
-| Reports | `/api/v1/reports` |
-| Notifications | `/api/v1/notifications` |
-
-Full interactive docs at `http://localhost:8000/docs`
-
----
-
-## 🧪 Running Tests
+### Startup Steps
 
 ```bash
-# Unit tests (no DB required)
+# 1. Clone the repository
+git clone https://github.com/suvakovan/odoo-nmit-hackathon-dayflow-hrms.git
+cd odoo-nmit-hackathon-dayflow-hrms/dayflow-hrms
+
+# 2. Setup environment files
+cp .env.example .env
+cp backend/.env.example backend/.env
+
+# 3. Launch all services via Docker Compose
+docker compose up -d --build
+
+# 4. Run database migrations
+docker compose exec backend alembic upgrade head
+```
+
+### Service Access URLs
+* **Frontend Dashboard:** [http://localhost:3000](http://localhost:3000)
+* **Backend API Server:** [http://localhost:8000](http://localhost:8000)
+* **Interactive OpenAPI (Swagger) Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+## 📡 API Endpoint Overview
+
+| Module | Base Path | Key Capabilities |
+|---|---|---|
+| **Auth** | `/api/v1/auth` | Signup, Login, Email Verification, Password Reset |
+| **Employees** | `/api/v1/employees` | List Employees, View Profile, Edit Profile, Document Upload/Delete |
+| **Attendance** | `/api/v1/attendance` | Check-In, Check-Out, History, Flagged Records, Time Correction |
+| **Leave** | `/api/v1/leave` | Apply Leave, Personal History, Balance Tracker, Approve/Reject |
+| **Payroll** | `/api/v1/payroll` | Employee Payslip View, PDF Download, Admin Salary Updates |
+| **Reports** | `/api/v1/reports` | Export Payroll CSV, Attendance CSV, Leave Summary JSON |
+| **Notifications**| `/api/v1/notifications` | User Alerts, Mark as Read, Unread Counter |
+
+---
+
+## 🧪 Testing
+
+```bash
+# Execute backend unit test suite
 docker compose exec backend pytest app/tests/unit/ -v
 
-# Integration tests (requires test DB)
+# Execute backend integration test suite
 docker compose exec backend pytest app/tests/integration/ -v
+
+# Build frontend production bundle
+cd frontend && npm run build
 ```
 
 ---
 
-## ⚙️ Environment Variables
-
-See `backend/.env.example` for all configuration options including:
-- Database URL
-- JWT secret and expiry
-- SMTP credentials (set `EMAILS_ENABLED=true` to enable real email sending)
-- Redis URL for Celery
-- File storage backend (`local` or `s3`)
-
----
-
-## 📝 Development Notes
-
-- **Email verification**: In dev mode (`EMAILS_ENABLED=false`), verification tokens are logged and also returned in the signup response for convenience.
-- **Migrations**: After any model change, run `docker compose exec backend alembic revision --autogenerate -m "description"` followed by `alembic upgrade head`.
-- **PDF Payslips**: Generated using ReportLab. Download from the Payroll page.
-- **Celery**: Background tasks (email notifications) run in the `celery_worker` container.
+## 📄 License
+Distributed under the MIT License. See `LICENSE` for more details.
